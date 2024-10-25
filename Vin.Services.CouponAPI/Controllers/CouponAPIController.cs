@@ -192,7 +192,8 @@ namespace Vin.Services.CouponAPI.Controllers
         }
 
         [HttpDelete]
-        [Route("DeleteCoupon/{id:int}")]
+        //[Route("DeleteCoupon/{id:int}")]
+        [Route("{id:int}")]
         public ResponseDTO Delete(int id)
         {
             try

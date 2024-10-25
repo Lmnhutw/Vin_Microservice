@@ -52,8 +52,8 @@ namespace Vin.Web.Controllers
         }
 
         // GET: This shows the delete confirmation page
-        [HttpGet]
-        public async Task<IActionResult> CouponDelete(int couponId)
+        // [HttpGet]
+        /*public async Task<IActionResult> CouponDelete(int couponId)
         {
             _logger.LogInformation("GET CouponDelete called with couponId: {CouponId}", couponId);
 
@@ -76,37 +76,70 @@ namespace Vin.Web.Controllers
                 TempData["Error"] = "Error loading coupon details";
                 return RedirectToAction(nameof(CouponIndex));
             }
-        }
+        }*/
 
         // POST: This actually performs the delete operation
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CouponDeletePOST(int couponId)
+        /* [HttpPost]
+         [ValidateAntiForgeryToken]
+         public async Task<IActionResult> CouponDelete(CouponDTO couponDTO)
+         {
+             _logger.LogInformation("POST CouponDelete called with CouponId: {CouponId}", couponDTO.CouponId);
+
+             try
+             {
+                 ResponseDTO? response = await _couponService.DeleteCouponAsync(couponDTO.CouponId);
+
+                 if (response != null && response.IsSuccess)
+                 {
+                     _logger.LogInformation("Coupon with ID {CouponId} deleted successfully", couponDTO.CouponId);
+                     TempData["Success"] = "Coupon deleted successfully";
+                     return RedirectToAction(nameof(CouponIndex));
+                 }
+
+                 _logger.LogWarning("Failed to delete coupon with ID {CouponId}. Message: {Message}",
+                     couponDTO.CouponId, response?.Message);
+                 TempData["Error"] = response?.Message ?? "Failed to delete coupon";
+             }
+             catch (Exception ex)
+             {
+                 _logger.LogError(ex, "Error deleting coupon with ID {CouponId}", couponDTO.CouponId);
+                 TempData["Error"] = "An error occurred while deleting the coupon";
+             }
+
+             return RedirectToAction(nameof(CouponIndex));
+         }*/
+
+        public async Task<IActionResult> CouponDelete(int couponId)
         {
-            _logger.LogInformation("POST CouponDelete called with CouponId: {CouponId}", couponId);
+            ResponseDTO? response = await _couponService.GetCouponByIdAsync(couponId);
 
-            try
+            if (response != null && response.IsSuccess)
             {
-                ResponseDTO? response = await _couponService.DeleteCouponAsync(couponId);
-
-                if (response != null && response.IsSuccess)
-                {
-                    _logger.LogInformation("Coupon with ID {CouponId} deleted successfully", couponId);
-                    TempData["Success"] = "Coupon deleted successfully";
-                    return RedirectToAction(nameof(CouponIndex));
-                }
-
-                _logger.LogWarning("Failed to delete coupon with ID {CouponId}. Message: {Message}",
-                    couponId, response?.Message);
-                TempData["Error"] = response?.Message ?? "Failed to delete coupon";
+                CouponDTO? model = JsonConvert.DeserializeObject<CouponDTO>(Convert.ToString(response.Result));
+                return View(model);
             }
-            catch (Exception ex)
+            else
             {
-                _logger.LogError(ex, "Error deleting coupon with ID {CouponId}", couponId);
-                TempData["Error"] = "An error occurred while deleting the coupon";
+                TempData["error"] = response?.Message;
             }
+            return NotFound();
+        }
 
-            return RedirectToAction(nameof(CouponIndex));
+        [HttpPost]
+        public async Task<IActionResult> CouponDelete(CouponDTO couponDto)
+        {
+            ResponseDTO? response = await _couponService.DeleteCouponAsync(couponDto.CouponId);
+
+            if (response != null && response.IsSuccess)
+            {
+                TempData["success"] = "Coupon deleted successfully";
+                return RedirectToAction(nameof(CouponIndex));
+            }
+            else
+            {
+                TempData["error"] = response?.Message;
+            }
+            return View(couponDto);
         }
     }
 }

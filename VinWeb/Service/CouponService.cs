@@ -28,7 +28,7 @@ namespace Vin.Web.Service
             return await _baseService.SendAsync(new RequestDTO()
             {
                 ApiType = StaticDetail.ApiType.DELETE,
-                Url = $"{StaticDetail.CouponAPIBase}/api/Coupon/DeleteCoupon/{id}" // Consistent URL
+                Url = $"{StaticDetail.CouponAPIBase}/api/Coupon/{id}" // Consistent URL
             });
         }
 
