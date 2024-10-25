@@ -1,6 +1,6 @@
-﻿using Newtonsoft.Json;
-using System.Net;
+﻿using System.Net;
 using System.Text;
+using Newtonsoft.Json;
 using Vin.Web.Models;
 using Vin.Web.Service.IService;
 using static Vin.Web.Utility.StaticDetail;
@@ -16,23 +16,26 @@ namespace Vin.Web.Service
             _httpClientFactory = httpClientFactory;
         }
 
-        public async Task<ResponseDTO?> SendAsync(RequestDTO requsetDTO)
+        public async Task<ResponseDTO?> SendAsync(RequestDTO requestDTO)
         {
             try
             {
+                Console.WriteLine("ApiType: " + requestDTO.ApiType); // Debugging
+
                 HttpClient client = _httpClientFactory.CreateClient("VinAPI");
                 HttpRequestMessage message = new();
                 message.Headers.Add("Accept", "application/json");
                 //token
 
-                message.RequestUri = new Uri(requsetDTO.Url);
-                if (requsetDTO != null)
+                message.RequestUri = new Uri(requestDTO.Url);
+                if (requestDTO != null)
+
                 {
-                    message.Content = new StringContent(JsonConvert.SerializeObject(requsetDTO.Data), Encoding.UTF8, "application/json");
+                    message.Content = new StringContent(JsonConvert.SerializeObject(requestDTO.Data), Encoding.UTF8, "application/json");
                 }
                 HttpResponseMessage? apiRes = null;
 
-                switch (requsetDTO.ApiType)
+                switch (requestDTO.ApiType)
                 {
                     case ApiType.POST:
                         message.Method = HttpMethod.Post;

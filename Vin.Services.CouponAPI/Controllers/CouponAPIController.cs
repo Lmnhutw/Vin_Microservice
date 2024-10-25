@@ -1,12 +1,13 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Vin.Services.CouponAPI.Data;
 using Vin.Services.CouponAPI.Models;
 using Vin.Services.CouponAPI.Models.DTO;
 
 namespace Vin.Services.CouponAPI.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/Coupon")]
     [ApiController]
     public class CouponAPIController : Controller
     {
@@ -70,7 +71,7 @@ namespace Vin.Services.CouponAPI.Controllers
         {
             try
             {
-                Coupon cpn = _db.Coupons.FirstOrDefault(c => c.CouponCode.Equals(code, StringComparison.CurrentCultureIgnoreCase));
+                Coupon? cpn = _db.Coupons.FirstOrDefault(c => EF.Functions.Like(c.CouponCode, code));
                 if (cpn != null)
                 {
                     _res.Message = "Get Coupon successfully";
@@ -84,7 +85,7 @@ namespace Vin.Services.CouponAPI.Controllers
             catch (Exception ex)
             {
                 _res.IsSuccess = false;
-                _res.Message = "There no Coupon ";
+                _res.Message = "There no Coupon" + ex.Message;
             }
             return _res;
         }
@@ -169,7 +170,7 @@ namespace Vin.Services.CouponAPI.Controllers
         }*/
 
         [HttpPut]
-        [Route("UpdateCoupon/")]
+        [Route("UpdateCoupon")]
         public ResponseDTO Put([FromBody] CouponDTO couponDTO)
         {
             try

@@ -19,7 +19,7 @@ namespace Vin.Web.Service
             {
                 ApiType = StaticDetail.ApiType.POST,
                 Data = couponDTO,
-                Url = StaticDetail.CouponAPIBase + "/api/coupon/AddCoupon"
+                Url = StaticDetail.CouponAPIBase + "/api/Coupon/AddCoupon"
             });
         }
 
@@ -28,7 +28,7 @@ namespace Vin.Web.Service
             return await _baseService.SendAsync(new RequestDTO()
             {
                 ApiType = StaticDetail.ApiType.DELETE,
-                Url = StaticDetail.CouponAPIBase + "/api/coupon/DeleteCoupon" + id
+                Url = $"{StaticDetail.CouponAPIBase}/api/Coupon/DeleteCoupon/{id}" // Consistent URL
             });
         }
 
@@ -37,7 +37,7 @@ namespace Vin.Web.Service
             return await _baseService.SendAsync(new RequestDTO()
             {
                 ApiType = StaticDetail.ApiType.GET,
-                Url = StaticDetail.CouponAPIBase + "/api/coupon/GetCouponList"
+                Url = StaticDetail.CouponAPIBase + "/api/Coupon/GetCouponList"
             });
         }
 
@@ -46,7 +46,7 @@ namespace Vin.Web.Service
             return await _baseService.SendAsync(new RequestDTO()
             {
                 ApiType = StaticDetail.ApiType.GET,
-                Url = StaticDetail.CouponAPIBase + "/api/coupon/GetByCode" + couponCode
+                Url = $"{StaticDetail.CouponAPIBase}/api/Coupon/GetByCode/{couponCode}"
             });
         }
 
@@ -55,7 +55,7 @@ namespace Vin.Web.Service
             return await _baseService.SendAsync(new RequestDTO()
             {
                 ApiType = StaticDetail.ApiType.GET,
-                Url = StaticDetail.CouponAPIBase + "/api/coupon/GetCouponById" + id
+                Url = $"{StaticDetail.CouponAPIBase}/api/Coupon/GetCouponById/{id}" // Fixed URL
             });
         }
 
@@ -65,7 +65,7 @@ namespace Vin.Web.Service
             {
                 ApiType = StaticDetail.ApiType.PUT,
                 Data = couponDTO,
-                Url = StaticDetail.CouponAPIBase + "/api/coupon/UpdateCoupon"
+                Url = StaticDetail.CouponAPIBase + "/api/Coupon/UpdateCoupon"
             });
         }
     }
