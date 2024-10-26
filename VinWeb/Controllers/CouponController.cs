@@ -28,13 +28,13 @@ namespace Vin.Web.Controllers
             {
                 list = JsonConvert.DeserializeObject<List<CouponDTO>>(Convert.ToString(response.Result));
             }
+            else
+            {
+                TempData["error"] = response.Message;
+            }
 
             return View(list);
-        }
-
-        public async Task<IActionResult> CouponCreate()
-        {
-            return View();
+            
         }
 
         [HttpPost]
@@ -46,6 +46,10 @@ namespace Vin.Web.Controllers
                 if (response != null && response.IsSuccess)
                 {
                     return RedirectToAction(nameof(CouponIndex));
+                }
+                else
+                {
+                    TempData["error"] = response.Message;
                 }
             }
             return View(model);
@@ -124,6 +128,7 @@ namespace Vin.Web.Controllers
             }
             return NotFound();
         }
+        
 
         [HttpPost]
         public async Task<IActionResult> CouponDelete(CouponDTO couponDto)
@@ -141,5 +146,9 @@ namespace Vin.Web.Controllers
             }
             return View(couponDto);
         }
+        
+        
+        
+        
     }
 }
