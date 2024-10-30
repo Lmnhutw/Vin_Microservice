@@ -36,10 +36,6 @@ namespace Vin.Web.Controllers
             {
                 _toastNotification.AddErrorToastMessage(response?.Message ?? "Failed to load coupons");
             }
-            else
-            {
-                TempData["error"] = response.Message;
-            }
 
             return View(list);
         }
