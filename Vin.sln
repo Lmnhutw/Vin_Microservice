@@ -13,7 +13,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Services", "Services", "{C0
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Vin.Services.CouponAPI", "Vin.Services.CouponAPI\Vin.Services.CouponAPI.csproj", "{627C616B-6CC1-4719-BA11-16FF80BA5711}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vin.Web", "VinWeb\Vin.Web.csproj", "{2E529BAD-22E3-440A-8923-1D809DAD36E9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Vin.Web", "VinWeb\Vin.Web.csproj", "{2E529BAD-22E3-440A-8923-1D809DAD36E9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vin.Services.AuthAPI", "Vin.Services.AuthAPI\Vin.Services.AuthAPI.csproj", "{31CB2290-A016-4F1E-A714-FFCA6CFD9CB8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -29,6 +31,10 @@ Global
 		{2E529BAD-22E3-440A-8923-1D809DAD36E9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2E529BAD-22E3-440A-8923-1D809DAD36E9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2E529BAD-22E3-440A-8923-1D809DAD36E9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{31CB2290-A016-4F1E-A714-FFCA6CFD9CB8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{31CB2290-A016-4F1E-A714-FFCA6CFD9CB8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{31CB2290-A016-4F1E-A714-FFCA6CFD9CB8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{31CB2290-A016-4F1E-A714-FFCA6CFD9CB8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -36,6 +42,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{627C616B-6CC1-4719-BA11-16FF80BA5711} = {C08EAB2E-36C4-4B95-A00A-2C81C07E8254}
 		{2E529BAD-22E3-440A-8923-1D809DAD36E9} = {8496EB84-50FF-48B1-A4C7-BE6864AC302B}
+		{31CB2290-A016-4F1E-A714-FFCA6CFD9CB8} = {C08EAB2E-36C4-4B95-A00A-2C81C07E8254}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {CD5B441C-275F-4F03-AACE-17AEEE35D6FC}

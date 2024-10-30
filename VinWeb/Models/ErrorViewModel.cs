@@ -1,4 +1,4 @@
-namespace VinWeb.Models
+namespace Vin.Web.Models
 {
     public class ErrorViewModel
     {

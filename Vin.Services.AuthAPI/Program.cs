@@ -1,19 +1,26 @@
-using AutoMapper;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Vin.Services.CouponAPI;
-using Vin.Services.CouponAPI.Data;
+using Vin.Services.AuthAPI.Data;
+using Vin.Services.AuthAPI.Models;
+using Vin.Services.AuthAPI.Services;
+using Vin.Services.AuthAPI.Services.IServices;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+
+//Connection to SQL
 builder.Services.AddDbContext<AppDbContext>(option =>
 {
     option.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
 
-IMapper mapper = MappingConfig.InstanceMaps().CreateMapper();
-builder.Services.AddSingleton(mapper);
-builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<AppDbContext>().AddDefaultTokenProviders(); //register Identity,  ApplicationUser
+
+builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
+builder.Services.AddScoped<IAuthService, AuthService>(); //register authService
+
+builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("ApiSettings:JwtOptions")); //register Jwt
 
 builder.Services.AddControllers();
 
@@ -28,17 +35,18 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-app.UseStaticFiles();
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();// MUST be put before authorize
 app.UseAuthorization();
 
 app.MapControllers();
 
-ApplyMigration();
+ApplyMigration(); //applied migration method
 
 app.Run();
+
 void ApplyMigration()
 {
     using (var scope = app.Services.CreateScope())
