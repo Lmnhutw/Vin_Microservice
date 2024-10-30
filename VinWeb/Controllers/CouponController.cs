@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using NToastNotify;
 using Vin.Web.Models;
 using Vin.Web.Service.IService;
 
@@ -8,16 +9,18 @@ namespace Vin.Web.Controllers
     public class CouponController : Controller
     {
         private readonly ICouponService _couponService;
-        private readonly ILogger<CouponController> _logger; // Add this line
+        private readonly ILogger<CouponController> _logger;
+        private readonly IToastNotification _toastNotification; // Add this line
 
-        public CouponController
-            (
+        public CouponController(
             ICouponService couponService,
-            ILogger<CouponController> logger
-            ) // Modify constructor
+            ILogger<CouponController> logger,
+            IToastNotification toastNotification // Add this line
+        )
         {
             _couponService = couponService;
-            _logger = logger; // Initialize logger
+            _logger = logger;
+            _toastNotification = toastNotification; // Initialize toast notification
         }
 
         public async Task<IActionResult> CouponIndex()
@@ -27,6 +30,11 @@ namespace Vin.Web.Controllers
             if (response != null && response.IsSuccess)
             {
                 list = JsonConvert.DeserializeObject<List<CouponDTO>>(Convert.ToString(response.Result));
+                //_toastNotification.AddSuccessToastMessage("Loading successfully");
+            }
+            else
+            {
+                _toastNotification.AddErrorToastMessage(response?.Message ?? "Failed to load coupons");
             }
 
             return View(list);
@@ -34,7 +42,15 @@ namespace Vin.Web.Controllers
 
         public async Task<IActionResult> CouponCreate()
         {
-            return View();
+            try
+            {
+                return View();
+            }
+            catch (Exception ex)
+            {
+
+                return View("Error", new { message = "Unable to load the Coupon creation page. Please try again later." });
+            }
         }
 
         [HttpPost]
@@ -45,7 +61,12 @@ namespace Vin.Web.Controllers
                 ResponseDTO? response = await _couponService.CreateCouponsAsync(model);
                 if (response != null && response.IsSuccess)
                 {
+                    _toastNotification.AddSuccessToastMessage("Create successfully");
                     return RedirectToAction(nameof(CouponIndex));
+                }
+                else
+                {
+                    _toastNotification.AddErrorToastMessage(response?.Message ?? "Failed to load coupons");
                 }
             }
             return View(model);
@@ -120,7 +141,7 @@ namespace Vin.Web.Controllers
             }
             else
             {
-                TempData["error"] = response?.Message;
+                _toastNotification.AddErrorToastMessage(response?.Message ?? "Failed to load coupons");
             }
             return NotFound();
         }
@@ -128,17 +149,26 @@ namespace Vin.Web.Controllers
         [HttpPost]
         public async Task<IActionResult> CouponDelete(CouponDTO couponDto)
         {
-            ResponseDTO? response = await _couponService.DeleteCouponAsync(couponDto.CouponId);
+            try
+            {
+                ResponseDTO? response = await _couponService.DeleteCouponAsync(couponDto.CouponId);
 
-            if (response != null && response.IsSuccess)
-            {
-                TempData["success"] = "Coupon deleted successfully";
-                return RedirectToAction(nameof(CouponIndex));
+                if (response != null && response.IsSuccess)
+                {
+                    _toastNotification.AddSuccessToastMessage("Coupon deleted successfully");
+                    return RedirectToAction(nameof(CouponIndex));
+                }
+                else
+                {
+                    _toastNotification.AddErrorToastMessage(response?.Message ?? "Failed to delete coupon");
+                }
             }
-            else
+            catch (Exception ex)
             {
-                TempData["error"] = response?.Message;
+                _logger.LogError(ex, "Error deleting coupon with ID {CouponId}", couponDto.CouponId);
+                _toastNotification.AddErrorToastMessage("An error occurred while deleting the coupon");
             }
+
             return View(couponDto);
         }
     }

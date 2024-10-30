@@ -1,3 +1,4 @@
+using NToastNotify;
 using Vin.Web.Service;
 using Vin.Web.Service.IService;
 using Vin.Web.Utility;
@@ -11,6 +12,15 @@ builder.Services.AddHttpClient();
 builder.Services.AddHttpClient<ICouponService, CouponService>();
 StaticDetail.CouponAPIBase = builder.Configuration["ServiceUrls:CouponAPI"];
 
+// Toaster services
+builder.Services.AddControllersWithViews()
+    .AddNToastNotifyToastr(new ToastrOptions
+    {
+        ProgressBar = true,
+        PositionClass = ToastPositions.BottomCenter,
+        TimeOut = 5000
+    });
+
 builder.Services.AddScoped<IBaseService, BaseService>();
 builder.Services.AddScoped<ICouponService, CouponService>();
 
@@ -23,6 +33,8 @@ if (!app.Environment.IsDevelopment())
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
+
+app.UseNToastNotify();
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
