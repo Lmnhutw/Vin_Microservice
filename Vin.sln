@@ -15,7 +15,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Vin.Services.CouponAPI", "V
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Vin.Web", "VinWeb\Vin.Web.csproj", "{2E529BAD-22E3-440A-8923-1D809DAD36E9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vin.Services.AuthAPI", "Vin.Services.AuthAPI\Vin.Services.AuthAPI.csproj", "{31CB2290-A016-4F1E-A714-FFCA6CFD9CB8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Vin.Services.AuthAPI", "Vin.Services.AuthAPI\Vin.Services.AuthAPI.csproj", "{31CB2290-A016-4F1E-A714-FFCA6CFD9CB8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

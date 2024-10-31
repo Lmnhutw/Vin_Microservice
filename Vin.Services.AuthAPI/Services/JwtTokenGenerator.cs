@@ -1,6 +1,7 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Vin.Services.AuthAPI.Models;
 using Vin.Services.AuthAPI.Services.IServices;
@@ -11,9 +12,10 @@ namespace Vin.Services.AuthAPI.Services
     {
         private readonly JwtOptions _jwtOptions;
 
-        public JwtTokenGenerator(JwtOptions jwtOptions)
+        public JwtTokenGenerator(IOptions<JwtOptions> jwtOptions)
+        //IOptions<JwtOptions> allowing the framework to manage and inject the JwtOptions settings from configuration file
         {
-            _jwtOptions = jwtOptions;
+            _jwtOptions = jwtOptions.Value;
         }
 
         public string GenerateToken(ApplicationUser applicationUser)

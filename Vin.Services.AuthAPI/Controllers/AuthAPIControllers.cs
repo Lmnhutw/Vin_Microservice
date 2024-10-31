@@ -1,4 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Net;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Vin.Services.AuthAPI.Models;
 using Vin.Services.AuthAPI.Models.DTO;
 using Vin.Services.AuthAPI.Services.IServices;
 
@@ -9,28 +12,32 @@ namespace Vin.Services.AuthAPI.Controllers
     public class AuthAPIControllers : ControllerBase
     {
         private readonly IAuthService _authService;
+        private readonly UserManager<ApplicationUser> _userManager;
         protected ResponseDTO _res;
 
-        public AuthAPIControllers(IAuthService authService)
+        public AuthAPIControllers(IAuthService authService, UserManager<ApplicationUser> userManager)
         {
             _authService = authService;
             _res = new();
+            _userManager = userManager;
         }
 
-        [HttpPost("register")]
+        [HttpPost("Register")]
         public async Task<IActionResult> Register([FromBody] RegistrationRequestDTO model)
         {
-            var errorMessage = await _authService.Register(model);
-            if (!string.IsNullOrEmpty(errorMessage))
+            var userDTO = await _authService.Register(model);
+            if (userDTO == null)
             {
                 _res.IsSuccess = false;
-                _res.Message = errorMessage;
+                _res.Message = "Registration failed.";
                 return BadRequest(_res);
             }
+            _res.Result = userDTO;
+            _res.IsSuccess = true;
             return Ok(_res);
         }
 
-        [HttpPost("logn")]
+        [HttpPost("Login")]
         public async Task<IActionResult> Login([FromBody] LoginRequestDTO model)
         {
             var loginResponse = await _authService.Login(model);
@@ -43,5 +50,54 @@ namespace Vin.Services.AuthAPI.Controllers
             _res.Result = loginResponse;
             return Ok(_res);
         }
+
+        [HttpPost("AssignRole")]
+        public async Task<IActionResult> AssignRole([FromBody] RegistrationRequestDTO model)
+        {
+            var assignRoleSuccessful = await _authService.AssignRole(model.Email, model.Role.ToUpper());
+            if (!assignRoleSuccessful)
+            {
+                _res.IsSuccess = false;
+                _res.Message = "Error Encoutered";
+                return BadRequest(_res);
+            }
+
+            return Ok(_res);
+        }
+        [HttpPost("ForgotPassword")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDTO model)
+        {
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null)
+            {
+                _res.IsSuccess = false;
+                _res.Message = "Invalid email address.";
+                return BadRequest(_res);
+            }
+            //_res.IsSuccess = true;
+
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var resetLink = $"https://localhost:7163/reset-password?email={user.Email}&token={WebUtility.UrlEncode(token)}";
+
+
+
+            return Ok(_res);
+        }
+
+        [HttpPost("ResetPassword")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDTO model)
+        {
+            var success = await _authService.ResetPassword(model);
+            if (!success)
+            {
+                _res.IsSuccess = false;
+                _res.Message = "Invalid token or email.";
+                return BadRequest(_res);
+            }
+            _res.IsSuccess = true;
+            return Ok(_res);
+        }
+
+
     }
 }

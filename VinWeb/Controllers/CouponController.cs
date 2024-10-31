@@ -25,7 +25,7 @@ namespace Vin.Web.Controllers
 
         public async Task<IActionResult> CouponIndex()
         {
-            List<CouponDTO> list = new();
+            List<CouponDTO>? list = new();
             ResponseDTO? response = await _couponService.GetAllCouponAsync();
             if (response != null && response.IsSuccess)
             {
@@ -48,7 +48,7 @@ namespace Vin.Web.Controllers
             }
             catch (Exception ex)
             {
-                return View("Error", new { message = "Unable to load the Coupon creation page. Please try again later." });
+                return View("Error", new { message = "Unable to load the Coupon creation page. Please try again later." + ex });
             }
         }
 

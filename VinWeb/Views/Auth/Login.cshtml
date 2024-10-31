@@ -1,0 +1,35 @@
+﻿@using Vin.Web.Models.AuthModels;
+@model LoginRequestDTO
+<form method="post">
+    <div class="container border p-4">
+        <div class="row text-center">
+            <h1>Login</h1>
+        </div>
+        <div class="row text-center">
+            <div asp-validation-summary="All" class="text-danger"></div>
+        </div>
+        <div class="row">
+            <div class="col-6 offset-3 pb-2">
+                <input asp-for="UserName" class="form-control" placeholder="Username..." />
+            </div>
+            <div class="col-6 offset-3 pb-2">
+                <input asp-for="Password" class="form-control" placeholder="********" />
+            </div>
+            <div class="col-6 offset-3 pb-2">
+                <button type="submit" class="form-control btn-success" value="Submit">Login</button>
+            </div>
+        </div>
+
+
+        <div class="row text-center mt-3">
+            <div class="col-6 offset-3">
+                <a asp-action="ForgotPassword" asp-controller="Auth" class="text-primary">Forgot Password?</a>
+            </div>
+            <div class="col-6 offset-3">
+                <a asp-action="ResetPassword" asp-controller="Auth" class="text-primary">Reset Password</a>
+            </div>
+        </div>
+    </div>
+
+
+</form>
