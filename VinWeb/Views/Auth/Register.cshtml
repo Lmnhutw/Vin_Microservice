@@ -6,23 +6,24 @@
             <h1>Register</h1>
        </div>
         <div class="row text-center">
+
             </div>
             <div class="row"> 
                 <div class="col-6 offset-3 pb-2">
                     <input asp-for="Email" class="form-control" placeholder="Example@gmail.com"/>
-                <span asp-validation-summary="Email" class="text-danger" />
+                <span asp-validation-for="Email" class="text-danger" />
             </div>
                 <div class="col-6 offset-3 pb-2">
                     <input asp-for="FullName" class="form-control" placeholder="Ex: John Doe"/>
-                <span asp-validation-summary="FullName" class="text-danger" />
+                <span asp-validation-for="FullName" class="text-danger" />
                 </div>
                 <div class="col-6 offset-3 pb-2">
                     <input asp-for="PhoneNumber" class="form-control" placeholder="Phone Number"/>
-                <span asp-validation-summary="PhoneNumber" class="text-danger" />
+                <span asp-validation-for="PhoneNumber" class="text-danger" />
                 </div>
                 <div class="col-6 offset-3 pb-2">
                     <input asp-for="Password" class="form-control" placeholder="********"/>
-                <span asp-validation-summary="Password" class="text-danger" />
+                <span asp-validation-for="Password" class="text-danger" />
                 </div>
                 <div class="col-6 offset-3 pb-2">
                     <select asp-for="Role" class="form-select" asp-items="@ViewBag.RoleList">
@@ -40,3 +41,8 @@
 
 
 </form>
+
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

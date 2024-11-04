@@ -63,7 +63,8 @@ namespace Vin.Services.AuthAPI.Services
 
             //Generate Jwt token if user was found
 
-            var token = _jwtTokenGenerateor.GenerateToken(user);
+            var roles = await _userManager.GetRolesAsync(user);
+            var token = _jwtTokenGenerateor.GenerateToken(user, roles);
 
             UserDTO userDTO = new()
             {

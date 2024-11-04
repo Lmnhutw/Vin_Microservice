@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Newtonsoft.Json;
 using NToastNotify;
-using Vin.Web.Models;
 using Vin.Web.Models.AuthModels;
 using Vin.Web.Service.IService;
 using Vin.Web.Utility;
@@ -18,6 +17,7 @@ namespace Vin.Web.Controllers
         private readonly IAuthService _authService;
         private readonly IToastNotification _toastNotification;
         private readonly ITokenProvider _tokenProvider;
+
 
         public AuthController(IAuthService authService, IToastNotification toastNotification, ITokenProvider tokenProvider)
         {
@@ -76,12 +76,26 @@ namespace Vin.Web.Controllers
             ViewBag.RoleList = roleList;
             return View();
         }
+
         [HttpPost]
         public async Task<IActionResult> Register(RegistrationRequestDTO registration)
         {
+            // Add model validation check
+            /*if (!ModelState.IsValid)
+            {
+                foreach (var modelError in ModelState.Values.SelectMany(v => v.Errors))
+                {
+                    _toastNotification.AddErrorToastMessage(modelError.ErrorMessage);
+                }
+            }*/
 
             ResponseDTO result = await _authService.RegisterAsync(registration);
-            ResponseDTO assigningRole;
+            var roleList = new List<SelectListItem>()
+                {
+                new SelectListItem{Text=StaticDetail.RoleAdmin, Value=StaticDetail.RoleAdmin},
+                new SelectListItem{Text=StaticDetail.RoleCustomer, Value=StaticDetail.RoleCustomer},
+                };
+            ViewBag.RoleList = roleList;
 
             if (result != null && result.IsSuccess)
             {
@@ -89,23 +103,29 @@ namespace Vin.Web.Controllers
                 {
                     registration.Role = StaticDetail.RoleCustomer;
                 }
-                assigningRole = await _authService.AssignRoleAsync(registration);
+                var assigningRole = await _authService.AssignRoleAsync(registration);
                 if (assigningRole != null && assigningRole.IsSuccess)
                 {
                     _toastNotification.AddSuccessToastMessage("Register Successfully!!!");
                     return RedirectToAction(nameof(Login));
                 }
             }
-
-            var roleList = new List<SelectListItem>()
+            else if (result != null)
             {
-                new SelectListItem{Text=StaticDetail.RoleAdmin, Value=StaticDetail.RoleAdmin},
-                new SelectListItem{Text=StaticDetail.RoleCustomer, Value=StaticDetail.RoleCustomer},
+                if (result.ErrorMessages?.Any() == true)
+                {
+                    foreach (var error in result.ErrorMessages)
+                    {
+                        _toastNotification.AddErrorToastMessage(error);
+                    }
+                }
+                else if (!string.IsNullOrEmpty(result.Message))
+                {
+                    _toastNotification.AddErrorToastMessage(result.Message);
+                }
+            }
 
-            };
-            ViewBag.RoleList = roleList;
             return View(registration);
-
         }
 
         public async Task<IActionResult> Logout()
@@ -142,6 +162,8 @@ namespace Vin.Web.Controllers
 
             identity.AddClaim(new Claim(ClaimTypes.Name,
                 jwt.Claims.FirstOrDefault(u => u.Type == JwtRegisteredClaimNames.Email).Value));
+            identity.AddClaim(new Claim(ClaimTypes.Role,
+                jwt.Claims.FirstOrDefault(u => u.Type == "role").Value));
 
             var principal = new ClaimsPrincipal(identity);
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
