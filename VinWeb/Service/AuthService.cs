@@ -30,7 +30,7 @@ namespace Vin.Web.Service
             {
                 ApiType = StaticDetail.ApiType.POST,
                 Data = loginRequestDTO,
-                Url = StaticDetail.AuthAPIBase + "/api/auth/AssignRole"
+                Url = StaticDetail.AuthAPIBase + "/api/auth/Login"
             });
         }
 

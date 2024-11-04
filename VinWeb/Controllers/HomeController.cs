@@ -18,7 +18,7 @@ namespace VinWeb.Controllers
 
         public IActionResult Index()
         {
-            _toastNotification.AddSuccessToastMessage("Welcome to the homepage!");
+            //_toastNotification.AddSuccessToastMessage("Welcome to the homepage!");
             return View();
         }
 

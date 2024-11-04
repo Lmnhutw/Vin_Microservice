@@ -74,19 +74,39 @@ namespace Vin.Services.AuthAPI.Controllers
                 _res.Message = "Invalid email address.";
                 return BadRequest(_res);
             }
-            //_res.IsSuccess = true;
 
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
             var resetLink = $"https://localhost:7163/reset-password?email={user.Email}&token={WebUtility.UrlEncode(token)}";
 
+            //email
 
-
+            var success = await _authService.ForgotPassword(model);
+            if (!success == null)
+            {
+                _res.IsSuccess = false;
+                _res.Message = "Invalid email address.";
+                return BadRequest(_res);
+            }
+            _res.IsSuccess = true;
             return Ok(_res);
         }
 
         [HttpPost("ResetPassword")]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDTO model)
         {
+
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null)
+            {
+                _res.IsSuccess = false;
+                _res.Message = "Invalid email address.";
+                return BadRequest(_res);
+            }
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var resetLink = $"https://localhost:7163/reset-password?email={user.Email}&token={WebUtility.UrlEncode(token)}";
+
+            //email 
+
             var success = await _authService.ResetPassword(model);
             if (!success)
             {

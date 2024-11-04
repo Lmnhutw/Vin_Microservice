@@ -1,4 +1,5 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.AspNetCore.Identity
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -14,6 +15,7 @@
 </head>
 <body>
     <header>
+        <p>User is authenticated: @User.Identity.IsAuthenticated</p>
         <nav class="navbar navbar-expand-lg bg-dark" data-bs-theme="dark">
             <div class="container-fluid">
                 <a class="navbar-brand" style="border: 2px solid white; border-radius: 5px; padding: 5px 10px;" asp-controller="Home" asp-action="Index">Vin Web </a>
@@ -42,7 +44,7 @@
                         </li>
                     </ul>
                     <ul class ="navbar-nav" >
-                        @if (User?.Identity != null && !User.Identity.IsAuthenticated)
+                        @if (!@User.Identity.IsAuthenticated)
                         {
                             <li class="nav-item">
                             <a class="nav-link" asp-controller="Auth" asp-action="Login">Login</a>
@@ -50,10 +52,14 @@
                             <li class="nav-item">
                             <a class="nav-link" asp-controller="Auth" asp-action="Register">Register</a>
                          </li>
-                        } else
+                        } 
+                        else
                         {
                             <li class="nav-item">
-                                <a class="nav-link" asp-controller="Auth" asp-action="Logout">Logout</a>
+                                <a class="nav-link " href="#">Hello  @User.Identity.Name</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link " asp-controller="Auth" asp-action="Logout">Logout</a>
                             </li>
                         }
                     </ul>
