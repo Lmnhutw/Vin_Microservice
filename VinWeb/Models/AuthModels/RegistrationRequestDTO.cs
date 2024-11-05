@@ -12,6 +12,7 @@ public class RegistrationRequestDTO
 
     [Required(ErrorMessage = "Phone number is required")]
     [Phone(ErrorMessage = "Invalid phone number format")]
+    [RegularExpression(@"^\d+$", ErrorMessage = "Phone number must contain only numbers.")]
     public string PhoneNumber { get; set; }
 
     [Required(ErrorMessage = "Password is required")]

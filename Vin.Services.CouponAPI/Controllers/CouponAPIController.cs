@@ -49,13 +49,13 @@ namespace Vin.Services.CouponAPI.Controllers
             try
             {
                 Coupon cpn = _db.Coupons.First(c => c.CouponId == id);
-                //CouponDTO cpDto = new CouponDTO()
-                //{
-                //    CouponId = obj.CouponId,
-                //    CouponCode = obj.CouponCode,
-                //    DiscountAmount = obj.DiscountAmount,
-                //    MinAmount = obj.MinAmount
-                //};
+                /*CouponDTO cpDto = new CouponDTO()
+                {
+                    CouponId = cpn.CouponId,
+                    CouponCode = cpn.CouponCode,
+                    DiscountAmount = cpn.DiscountAmount,
+                    MinAmount = cpn.MinAmount
+                };*/
                 _res.Result = _mapper.Map<Coupon>(cpn);
                 _res.Message = "Get Coupon successfully";
             }
@@ -94,6 +94,7 @@ namespace Vin.Services.CouponAPI.Controllers
 
         [HttpPost]
         [Route("AddCoupon")]
+        [Authorize(Roles = "ADMIN")]
         public ResponseDTO Post([FromBody] CouponDTO couponDTO)
         {
             try
@@ -173,6 +174,7 @@ namespace Vin.Services.CouponAPI.Controllers
 
         [HttpPut]
         [Route("UpdateCoupon")]
+        [Authorize(Roles = "ADMIN")]
         public ResponseDTO Put([FromBody] CouponDTO couponDTO)
         {
             try
@@ -196,6 +198,7 @@ namespace Vin.Services.CouponAPI.Controllers
         [HttpDelete]
         //[Route("DeleteCoupon/{id:int}")]
         [Route("{id:int}")]
+        [Authorize(Roles = "ADMIN")]
         public ResponseDTO Delete(int id)
         {
             try

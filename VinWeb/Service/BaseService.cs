@@ -8,21 +8,30 @@ using static Vin.Web.Utility.StaticDetail;
 public class BaseService : IBaseService
 {
     private readonly IHttpClientFactory _httpClientFactory;
+    private readonly ITokenProvider _tokenProvider;
 
-    public BaseService(IHttpClientFactory httpClientFactory)
+    public BaseService(IHttpClientFactory httpClientFactory, ITokenProvider tokenProvider)
     {
         _httpClientFactory = httpClientFactory;
+        _tokenProvider = tokenProvider;
     }
 
-    public async Task<ResponseDTO?> SendAsync(RequestDTO requestDTO)
+    public async Task<ResponseDTO?> SendAsync(RequestDTO requestDTO, bool withBearer = true)
     {
         try
         {
             HttpClient client = _httpClientFactory.CreateClient("VinAPI");
             HttpRequestMessage message = new();
             message.Headers.Add("Accept", "application/json");
-            message.RequestUri = new Uri(requestDTO.Url);
 
+            //pass token
+            if (withBearer)
+            {
+                var token = _tokenProvider.GetToken();
+                message.Headers.Add("Authorization", $"Bearer {token}");
+            }
+
+            message.RequestUri = new Uri(requestDTO.Url);
             if (requestDTO.Data != null)
             {
                 message.Content = new StringContent(JsonConvert.SerializeObject(requestDTO.Data),

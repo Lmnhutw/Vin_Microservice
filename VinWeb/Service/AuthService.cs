@@ -20,7 +20,7 @@ namespace Vin.Web.Service
             {
                 ApiType = StaticDetail.ApiType.POST,
                 Data = registrationRequestDTO,
-                Url = StaticDetail.AuthAPIBase + "/api/auth/AssignRole"
+                Url = $"{StaticDetail.AuthAPIBase}/api/auth/AssignRole"
             });
         }
 
@@ -30,8 +30,8 @@ namespace Vin.Web.Service
             {
                 ApiType = StaticDetail.ApiType.POST,
                 Data = loginRequestDTO,
-                Url = StaticDetail.AuthAPIBase + "/api/auth/Login"
-            });
+                Url = $"{StaticDetail.AuthAPIBase}/api/auth/Login"
+            }, withBearer: false);
         }
 
         public async Task<ResponseDTO> RegisterAsync(RegistrationRequestDTO registrationRequestDTO)
@@ -40,8 +40,8 @@ namespace Vin.Web.Service
             {
                 ApiType = StaticDetail.ApiType.POST,
                 Data = registrationRequestDTO,
-                Url = StaticDetail.AuthAPIBase + "/api/auth/Register"
-            });
+                Url = $"{StaticDetail.AuthAPIBase}/api/auth/Register"
+            }, withBearer: false);
         }
 
 
@@ -51,7 +51,7 @@ namespace Vin.Web.Service
             {
                 ApiType = StaticDetail.ApiType.POST,
                 Data = forgotPasswordDTO,
-                Url = StaticDetail.AuthAPIBase + "/api/auth/ForgotPassword"
+                Url = $"{StaticDetail.AuthAPIBase}/api/auth/ForgotPassword"
             });
         }
 
@@ -61,7 +61,7 @@ namespace Vin.Web.Service
             {
                 ApiType = StaticDetail.ApiType.POST,
                 Data = resetPasswordDTO,
-                Url = StaticDetail.AuthAPIBase + "/api/auth/ResetPassword"
+                Url = $"{StaticDetail.AuthAPIBase}/api/auth/ResetPassword"
             });
         }
 

@@ -3,6 +3,7 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using Vin.Services.CouponAPI;
 using Vin.Services.CouponAPI.Data;
 
@@ -21,16 +22,41 @@ builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddControllers();
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(option =>
+{
+    option.AddSecurityDefinition(name: JwtBearerDefaults.AuthenticationScheme, securityScheme: new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Description = "Enter the Bearer Authorization string as following: 'Bearer Generated-JWT-Token",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer"
+    });
+    option.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+        {
+            Reference = new OpenApiReference
+            {
+                Type = ReferenceType.SecurityScheme,
+                Id = JwtBearerDefaults.AuthenticationScheme
+            }
+        }, new string[]{ }
+        }
+    });
+});
 
+//Incase it cant regconize the apisettings, and usually it dont.
+var settingSection = builder.Configuration.GetSection("ApiSettings");
 
 //Configure setting
-var secret = builder.Configuration.GetValue<string>("ApiSetting:Secret");
-var issurer = builder.Configuration.GetValue<string>("ApiSetting:Issuer");
-var audience = builder.Configuration.GetValue<string>("ApiSetting:Audience");
+var secret = settingSection.GetValue<string>("Secret");
+var issurer = settingSection.GetValue<string>("Issuer");
+var audience = settingSection.GetValue<string>("Audience");
 
-//Create key and encoding base on 'secrett;
-var key = Encoding.UTF8.GetBytes(secret);
+//Create key and encoding base on 'secret'
+var key = Encoding.ASCII.GetBytes(secret);
 
 builder.Services.AddAuthentication(x =>
 {

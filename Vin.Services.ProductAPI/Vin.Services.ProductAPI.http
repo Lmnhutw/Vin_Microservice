@@ -1,0 +1,6 @@
+@Vin.Services.ProductAPI_HostAddress = http://localhost:5122
+
+GET {{Vin.Services.ProductAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

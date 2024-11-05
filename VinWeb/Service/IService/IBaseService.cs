@@ -4,6 +4,7 @@ namespace Vin.Web.Service.IService
 {
     public interface IBaseService
     {
-        Task<ResponseDTO?> SendAsync(RequestDTO requsetDTO);
+        Task<ResponseDTO?> SendAsync(RequestDTO requsetDTO, bool withBearer = true);
+
     }
 }

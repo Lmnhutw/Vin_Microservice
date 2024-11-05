@@ -1,5 +1,4 @@
-﻿using Vin.Web.Models;
-using Vin.Web.Models.AuthModels;
+﻿using Vin.Web.Models.AuthModels;
 
 namespace Vin.Web.Service.IService
 {

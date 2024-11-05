@@ -60,8 +60,14 @@ namespace Vin.Web.Controllers
         [HttpGet]
         public IActionResult Register()
         {
-
+            var roleList = new List<SelectListItem>
+            {
+        new() { Text = StaticDetail.RoleAdmin, Value = StaticDetail.RoleAdmin },
+        new() { Text = StaticDetail.RoleCustomer, Value = StaticDetail.RoleCustomer },
+            };
+            ViewBag.RoleList = roleList;
             return View();
+
         }
 
         [HttpGet]
@@ -90,12 +96,7 @@ namespace Vin.Web.Controllers
             }*/
 
             ResponseDTO result = await _authService.RegisterAsync(registration);
-            var roleList = new List<SelectListItem>()
-                {
-                new SelectListItem{Text=StaticDetail.RoleAdmin, Value=StaticDetail.RoleAdmin},
-                new SelectListItem{Text=StaticDetail.RoleCustomer, Value=StaticDetail.RoleCustomer},
-                };
-            ViewBag.RoleList = roleList;
+
 
             if (result != null && result.IsSuccess)
             {
