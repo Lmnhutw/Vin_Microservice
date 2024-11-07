@@ -2,8 +2,8 @@
 
 namespace Vin.Services.ShoppingCartAPI.Service.IService
 {
-    public interface IProductService
+    public interface ICouponService
     {
-        Task<IEnumerable<ProductDTO>> GetProducts();
+        Task<CouponDTO> GetCoupon(string couponCode);
     }
 }

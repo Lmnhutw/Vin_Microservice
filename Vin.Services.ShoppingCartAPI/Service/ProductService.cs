@@ -18,7 +18,7 @@ namespace Vin.Services.ShoppingCartAPI.Service
         public async Task<IEnumerable<ProductDTO>> GetProducts()
         {
 
-            var client = _httpClientFactory.CreateClient("GetProductList");
+            var client = _httpClientFactory.CreateClient("GetProduct");
             var response = await client.GetAsync("/api/Product/GetProductList");
 
             if (!response.IsSuccessStatusCode)

@@ -18,8 +18,14 @@ builder.Services.AddDbContext<AppDbContext>(option => option.UseSqlServer(builde
 IMapper mapper = MappingConfig.RegisterMaps().CreateMapper();
 builder.Services.AddSingleton(mapper);
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
-builder.Services.AddHttpClient("GetProductList", u => u.BaseAddress = new Uri(builder.Configuration["ServiceUrls:ProductAPI"]));
+builder.Services.AddHttpClient("GetProduct",
+    u => u.BaseAddress = new Uri(builder.Configuration["ServiceUrls:ProductAPI"]));
+
+builder.Services.AddHttpClient("GetCoupon",
+    u => u.BaseAddress = new Uri(builder.Configuration["ServiceUrls:CouponAPI"]));
+
 builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<ICouponService, CouponService>();
 builder.Services.AddHttpContextAccessor();
 
 

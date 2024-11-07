@@ -13,11 +13,13 @@ builder.Services.AddHttpClient();
 builder.Services.AddHttpClient<ICouponService, CouponService>();
 builder.Services.AddHttpClient<IProductService, ProductService>();
 builder.Services.AddHttpClient<IAuthService, AuthService>();
+builder.Services.AddHttpClient<IShoppingCartService, ShoppingCartService>();
 
 //Configure API
 StaticDetail.CouponAPIBase = builder.Configuration["ServiceUrls:CouponAPI"];
 StaticDetail.AuthAPIBase = builder.Configuration["ServiceUrls:AuthAPI"];
 StaticDetail.ProductAPIBase = builder.Configuration["ServiceUrls:ProductAPI"];
+StaticDetail.ProductAPIBase = builder.Configuration["ServiceUrls:ShoppingCartAPI"];
 
 // Toaster services
 builder.Services.AddControllersWithViews()
@@ -33,6 +35,7 @@ builder.Services.AddScoped<IBaseService, BaseService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICouponService, CouponService>();
 builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<IShoppingCartService, ShoppingCartService>();
 
 //Add Cookies
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)

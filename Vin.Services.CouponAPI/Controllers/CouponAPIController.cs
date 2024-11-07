@@ -10,7 +10,7 @@ namespace Vin.Services.CouponAPI.Controllers
 {
     [Route("api/Coupon")]
     [ApiController]
-    [Authorize]
+    // [Authorize]
     public class CouponAPIController : Controller
     {
         private readonly AppDbContext _db;

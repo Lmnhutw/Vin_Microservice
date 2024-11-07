@@ -1,5 +1,4 @@
-﻿
-namespace Vin.Services.ShoppingCartAPI.Models
+﻿namespace Vin.Web.Models.CartModels
 {
     public class CartHeaderDTO
     {

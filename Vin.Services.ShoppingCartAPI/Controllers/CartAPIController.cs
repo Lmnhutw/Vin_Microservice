@@ -6,7 +6,7 @@ using Vin.Services.ShoppingCartAPI.Models;
 using Vin.Services.ShoppingCartAPI.Models.DTO;
 using Vin.Services.ShoppingCartAPI.Service.IService;
 
-[Route("api/cart")]
+[Route("api/Cart")]
 [ApiController]
 public class CartAPIController : ControllerBase
 {
@@ -14,14 +14,16 @@ public class CartAPIController : ControllerBase
     private readonly IMapper _mapper;
     private readonly AppDbContext _db;
     private readonly IProductService _productService;
+    private readonly ICouponService _couponService;
 
 
-    public CartAPIController(AppDbContext db, IMapper mapper, IProductService productService)
+    public CartAPIController(AppDbContext db, IMapper mapper, IProductService productService, ICouponService couponService)
     {
         _db = db;
         _res = new ResponseDTO();
         _mapper = mapper;
         _productService = productService;
+        _couponService = couponService;
     }
 
     [HttpGet("GetCart/{userID}")]
@@ -41,8 +43,35 @@ public class CartAPIController : ControllerBase
             foreach (var item in cart.CartDetails)
             {
                 item.Product = productDTOs.FirstOrDefault(u => u.ProductId == item.ProductId);
-                cart.CartHeader.CartTotal += (item.Count * item.Product.Price);
+                if (item.Product != null) // Add this check
+                {
+                    cart.CartHeader.CartTotal += (item.Count * item.Product.Price);
+                }
+
+
             }
+
+            //check if couponcode null or not 
+            if (!string.IsNullOrEmpty(cart.CartHeader.CouponCode))
+            {
+                CouponDTO coupon = await _couponService.GetCoupon(cart.CartHeader.CouponCode);
+                if (coupon != null)
+                {
+                    if (cart.CartHeader.CartTotal > coupon.MinAmount) //the require amount to use coupon)
+                    {
+                        cart.CartHeader.CartTotal -= coupon.DiscountAmount;
+                        cart.CartHeader.Discount = coupon.DiscountAmount;
+                    }
+                    else
+                    {
+                        _res.IsSuccess = false;
+                        _res.Message = "Your order does not meet the promotion requirements. Please checks your order and Try again.";
+                    }
+
+                }
+            }
+            /* _res.Message = "The Coupon you just type in is not available, please try another one.";*/
+
             _res.Result = cart;
         }
         catch (Exception ex)
