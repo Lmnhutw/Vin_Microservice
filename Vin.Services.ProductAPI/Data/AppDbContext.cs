@@ -2,7 +2,7 @@
 using Vin.Services.ProductAPI.Models;
 
 
-namespace Vin.Services.CouponAPI.Data
+namespace Vin.Services.ProductAPI.Data
 {
     public class AppDbContext : DbContext
     {

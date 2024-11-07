@@ -40,7 +40,15 @@
 
                             <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Content Management</a>
                         <div class="dropdown-menu">
-                        <a class="dropdown-item" style=" padding-right: 8px ;padding-left: 8px; border-radius: inherit" asp-controller="Coupon" asp-action="CouponIndex">Coupon</a> </div>
+                            
+                                  @* <li> *@
+                                     <a class="dropdown-item" style=" padding-right: 8px ;padding-left: 8px; border-radius: inherit" asp-controller="Coupon" asp-action="CouponIndex">Coupon</a>
+                                 @*  </li>
+                                  <li> *@
+                                     <a class="dropdown-item" style=" padding-right: 8px ;padding-left: 8px; border-radius: inherit" asp-controller="Product" asp-action="ProductIndex">Product</a>
+                                  @* </li> *@
+                            
+                        </div>
                         </li>
                     </ul>
                     <ul class ="navbar-nav" >

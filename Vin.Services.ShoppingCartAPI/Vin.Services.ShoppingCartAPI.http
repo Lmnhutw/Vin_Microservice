@@ -1,0 +1,6 @@
+@Vin.Services.ShoppingCartAPI_HostAddress = http://localhost:5153
+
+GET {{Vin.Services.ShoppingCartAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

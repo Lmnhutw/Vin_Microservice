@@ -10,12 +10,12 @@ namespace Vin.Web.Controllers
     {
         private readonly ICouponService _couponService;
         private readonly ILogger<CouponController> _logger;
-        private readonly IToastNotification _toastNotification; // Add this line
+        private readonly IToastNotification _toastNotification;
 
         public CouponController(
             ICouponService couponService,
             ILogger<CouponController> logger,
-            IToastNotification toastNotification // Add this line
+            IToastNotification toastNotification
         )
         {
             _couponService = couponService;

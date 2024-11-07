@@ -10,6 +10,7 @@ a.navbar-brand {
 
 .dropdown-menu.show {
     width: 100% !important;
+/*    text-align:center !important;*/
 }
 
 .btn-primary {
