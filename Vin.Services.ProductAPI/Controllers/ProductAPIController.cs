@@ -13,8 +13,8 @@ namespace Vin.Services.ProductAPI.Controllers
     public class ProductAPIController : Controller
     {
         private readonly AppDbContext _db;
-        private ResponseDTO _res;
-        private IMapper _mapper;
+        private readonly ResponseDTO _res;
+        private readonly IMapper _mapper;
 
         public ProductAPIController(AppDbContext db, IMapper mapper)
         {
