@@ -28,6 +28,9 @@
                             <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">Cart</a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link" href="#">Features</a>
                         </li>
                         <li class="nav-item">
@@ -39,16 +42,15 @@
                         <li class="nav-item dropdown">
 
                             <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Content Management</a>
-                        <div class="dropdown-menu">
-                            
-                                  @* <li> *@
-                                     <a class="dropdown-item" style=" padding-right: 8px ;padding-left: 8px; border-radius: inherit" asp-controller="Coupon" asp-action="CouponIndex">Coupon</a>
-                                 @*  </li>
-                                  <li> *@
-                                     <a class="dropdown-item" style=" padding-right: 8px ;padding-left: 8px; border-radius: inherit" asp-controller="Product" asp-action="ProductIndex">Product</a>
-                                  @* </li> *@
-                            
+                        <div class="dropdown-menu">                                                           
+                                     <a class="dropdown-item" style=" padding-right: 8px ;padding-left: 8px; border-radius: inherit" asp-controller="Coupon" asp-action="CouponIndex">Coupon</a>                                
+                                     <a class="dropdown-item" style=" padding-right: 8px ;padding-left: 8px; border-radius: inherit" asp-controller="Product" asp-action="ProductIndex">Product</a>                           
                         </div>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-area="" asp-controller="Cart" asp-action="CartIndex">
+                                &nbsp; <i class="bi bi-cart"></i>&nbsp;
+                            </a>
                         </li>
                     </ul>
                     <ul class ="navbar-nav" >
