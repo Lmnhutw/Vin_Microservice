@@ -2,6 +2,7 @@
 using System.Text;
 using Newtonsoft.Json;
 using Vin.Web.Models;
+using Vin.Web.Models.BaseMessage;
 using Vin.Web.Service.IService;
 using static Vin.Web.Utility.StaticDetail;
 
@@ -124,17 +125,4 @@ public class BaseService : IBaseService
             };
         }
     }
-}
-
-// Add these classes to handle different error response formats
-public class ValidationErrorResponse
-{
-    [JsonProperty("errors")]
-    public Dictionary<string, string[]> Errors { get; set; }
-}
-
-public class ErrorResponse
-{
-    public string Message { get; set; }
-    public string[] Errors { get; set; }
 }
