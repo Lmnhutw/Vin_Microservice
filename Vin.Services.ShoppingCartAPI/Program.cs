@@ -8,6 +8,7 @@ using Vin.Services.ShoppingCartAPI;
 using Vin.Services.ShoppingCartAPI.Data;
 using Vin.Services.ShoppingCartAPI.Service;
 using Vin.Services.ShoppingCartAPI.Service.IService;
+using Vin.Services.ShoppingCartAPI.Utility.Vin.Services.ShoppingCartAPI.Utility;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,15 +16,19 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddDbContext<AppDbContext>(option => option.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+//Add auto mapper
 IMapper mapper = MappingConfig.RegisterMaps().CreateMapper();
 builder.Services.AddSingleton(mapper);
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
 builder.Services.AddHttpClient("GetProduct",
-    u => u.BaseAddress = new Uri(builder.Configuration["ServiceUrls:ProductAPI"]));
+    u => u.BaseAddress = new Uri(builder.Configuration["ServiceUrls:ProductAPI"])).AddHttpMessageHandler<AuthenticatedHttpClientHandler>();
 
 builder.Services.AddHttpClient("GetCoupon",
-    u => u.BaseAddress = new Uri(builder.Configuration["ServiceUrls:CouponAPI"]));
+    u => u.BaseAddress = new Uri(builder.Configuration["ServiceUrls:CouponAPI"])).AddHttpMessageHandler<AuthenticatedHttpClientHandler>();
 
+
+builder.Services.AddScoped<AuthenticatedHttpClientHandler>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ICouponService, CouponService>();
 builder.Services.AddHttpContextAccessor();

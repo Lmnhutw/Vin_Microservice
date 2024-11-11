@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Vin.Services.ShoppingCartAPI.Models;
+using Vin.Services.ShoppingCartAPI.Models.DTO;
 
 namespace Vin.Services.ShoppingCartAPI
 {
@@ -7,10 +8,10 @@ namespace Vin.Services.ShoppingCartAPI
     {
         public static MapperConfiguration RegisterMaps()
         {
-            var mappingConfig = new MapperConfiguration(Config =>
+            var mappingConfig = new MapperConfiguration(config =>
             {
-                Config.CreateMap<CartHeader, CartHeaderDTO>().ReverseMap();
-                Config.CreateMap<CartDetails, CartDetailsDTO>().ReverseMap();
+                config.CreateMap<CartHeader, CartHeaderDTO>().ReverseMap();
+                config.CreateMap<CartDetails, CartDetailsDTO>().ReverseMap();
             });
             return mappingConfig;
         }

@@ -15,7 +15,7 @@
 </head>
 <body>
     <header>
-        <p>User is authenticated: @User.Identity.IsAuthenticated</p>
+        
         <nav class="navbar navbar-expand-lg bg-dark" data-bs-theme="dark">
             <div class="container-fluid">
                 <a class="navbar-brand" style="border: 2px solid white; border-radius: 5px; padding: 5px 10px;" asp-controller="Home" asp-action="Index">Vin Web </a>
@@ -27,17 +27,7 @@
                         <li class="nav-item">
                             <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">Cart</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#">Features</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#">Pricing</a>
-                        </li>
-                        <li><a class="nav-link" href="#">About</a>
-                            </li>
+                              
                         
                         <li class="nav-item dropdown">
 
@@ -48,7 +38,12 @@
                         </div>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Cart" asp-action="CartIndex">
+                            <a class="nav-link " asp-area="" asp-controller="Order" asp-action="OrderIndex">
+                                Manage Order
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link " asp-area="" asp-controller="ShoppingCart" asp-action="CartIndex">
                                 &nbsp; <i class="bi bi-cart"></i>&nbsp;
                             </a>
                         </li>

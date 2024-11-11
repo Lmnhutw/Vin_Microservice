@@ -2,6 +2,7 @@
 @using Vin.Web.Models
 @model ProductDTO
 <form method="post">
+    <input asp-for="ProductId" hidden />
     <div class=" pt-4">
         <div class="card container" style="border:1px solid #808080;">
             <div class="card-header bg-dark text-light row" style="border-radius: 0px;">
@@ -9,7 +10,7 @@
                     <h1 class="text-white">Name</h1>
                 </div>
                 <div class="col-12 col-md-6 text-end">
-                    <h1 class="text-warning"> $$</h1>
+                    <h1 class="text-warning"> @string.Format("{0:N0} VND", Model.Price)</h1>
                 </div>
             </div>
             <div class="card-body">
@@ -35,7 +36,7 @@
             </div>
             <div class="card-footer row bg-dark">
                 <div class="col-12 col-md-6 pb-1 ">
-                    <a class="btn btn-success btn-square form-control btn-lg" style="height:50px;">Back to List</a>
+                    <a class="btn btn-success btn-square form-control btn-lg" style="height:50px;" asp-controller="Home" asp-action="Index" >Back to List</a>
                 </div>
                 <div class="col-12 col-md-6 ">
                     <button type="submit" class="btn btn-primary form-control btn-lg" style="height:50px;">Add to Cart</button>

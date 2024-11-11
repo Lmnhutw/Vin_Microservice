@@ -19,7 +19,7 @@ builder.Services.AddHttpClient<IShoppingCartService, ShoppingCartService>();
 StaticDetail.CouponAPIBase = builder.Configuration["ServiceUrls:CouponAPI"];
 StaticDetail.AuthAPIBase = builder.Configuration["ServiceUrls:AuthAPI"];
 StaticDetail.ProductAPIBase = builder.Configuration["ServiceUrls:ProductAPI"];
-StaticDetail.ProductAPIBase = builder.Configuration["ServiceUrls:ShoppingCartAPI"];
+StaticDetail.ShoppingCartAPIBase = builder.Configuration["ServiceUrls:ShoppingCartAPI"];
 
 // Toaster services
 builder.Services.AddControllersWithViews()

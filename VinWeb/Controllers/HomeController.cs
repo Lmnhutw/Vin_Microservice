@@ -1,9 +1,11 @@
 using System.Diagnostics;
+using IdentityModel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using NToastNotify;
 using Vin.Web.Models;
+using Vin.Web.Models.CartModels;
 using Vin.Web.Service.IService;
 
 namespace VinWeb.Controllers
@@ -13,12 +15,14 @@ namespace VinWeb.Controllers
         private readonly ILogger<HomeController> _logger;
         private readonly IToastNotification _toastNotification;
         private readonly IProductService _productService;
+        private readonly IShoppingCartService _shoppingCartService;
 
-        public HomeController(ILogger<HomeController> logger, IToastNotification toastNotification, IProductService productService)
+        public HomeController(ILogger<HomeController> logger, IToastNotification toastNotification, IProductService productService, IShoppingCartService shoppingCartService)
         {
             _logger = logger;
             _toastNotification = toastNotification;
             _productService = productService;
+            _shoppingCartService = shoppingCartService;
         }
 
         public async Task<IActionResult> Index()
@@ -37,6 +41,8 @@ namespace VinWeb.Controllers
 
             return View(list);
         }
+
+
         [Authorize]
         public async Task<IActionResult> ProductDetails(int productId)
         {
@@ -53,6 +59,46 @@ namespace VinWeb.Controllers
             }
 
             return View(model);
+        }
+
+        [Authorize]
+        [HttpPost]
+        [ActionName("ProductDetails")]
+        public async Task<IActionResult> ProductDetails(ProductDTO productDTO)
+        {
+            CartDTO cartDTO = new CartDTO()
+            {
+                CartHeader = new CartHeaderDTO
+                {
+                    UserId = User.Claims.Where(u => u.Type == JwtClaimTypes.Subject)?.FirstOrDefault()?.Value
+                }
+            };
+
+            CartDetailsDTO cartDetails = new CartDetailsDTO()
+            {
+                Count = productDTO.Count,
+                ProductId = productDTO.ProductId,
+            };
+
+            List<CartDetailsDTO> cartDetailsDTOs = new()
+            {
+                cartDetails
+            };
+            cartDTO.CartDetails = cartDetailsDTOs;
+
+            ResponseDTO? response = await _shoppingCartService.UpsertCartAsync(cartDTO);
+
+            if (response != null && response.IsSuccess)
+            {
+                _toastNotification.AddSuccessToastMessage(response?.Message ?? "Loading successfully");
+                return RedirectToAction(nameof(Index));
+            }
+            else
+            {
+                _toastNotification.AddErrorToastMessage(response?.Message ?? "Failed to load product information");
+            }
+
+            return View(productDTO);
         }
 
         public IActionResult Privacy()

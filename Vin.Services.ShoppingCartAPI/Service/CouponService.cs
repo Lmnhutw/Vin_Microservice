@@ -32,7 +32,7 @@ namespace Vin.Services.ShoppingCartAPI.Service.IService
             }
 
             var res = JsonConvert.DeserializeObject<ResponseDTO>(apiContent);
-            if (res?.IsSuccess == true && res.Result != null)
+            if (res.IsSuccess && res != null)
             {
                 return JsonConvert.DeserializeObject<CouponDTO>(Convert.ToString(res.Result));
             }

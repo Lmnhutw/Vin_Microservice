@@ -33,7 +33,7 @@ public class CartAPIController : ControllerBase
         {
             CartDTO cart = new()
             {
-                CartHeader = _mapper.Map<CartHeaderDTO>(_db.CartHeader.First(u => u.UserId == userID)),
+                CartHeader = _mapper.Map<CartHeaderDTO>(_db.CartHeaders.First(u => u.UserId == userID)),
             };
             cart.CartDetails = _mapper.Map<IEnumerable<CartDetailsDTO>>(_db.CartDetails
                 .Where(u => u.CartHeaderId == cart.CartHeader.CartHeaderId));
@@ -70,7 +70,7 @@ public class CartAPIController : ControllerBase
 
                 }
             }
-            /* _res.Message = "The Coupon you just type in is not available, please try another one.";*/
+            _res.Message = "The Coupon you just type in is not available, please try another one.";
 
             _res.Result = cart;
         }
@@ -84,19 +84,18 @@ public class CartAPIController : ControllerBase
     }
 
     [HttpPost("ApplyCoupon")]
-    public async Task<object> ApplyCoupon([FromBody] CartDTO cartDTO)
+    public async Task<object> ApplyCoupon([FromBody] CartDTO cartDto)
     {
         try
         {
-            var cartFromDb = await _db.CartHeader.FirstAsync(u => u.UserId == cartDTO.CartHeader.UserId);
-            cartFromDb.CouponCode = cartDTO.CartHeader.CouponCode;
-            _db.CartHeader.Update(cartFromDb);
+            var cartFromDb = await _db.CartHeaders.FirstAsync(u => u.UserId == cartDto.CartHeader.UserId);
+            cartFromDb.CouponCode = cartDto.CartHeader.CouponCode;
+            _db.CartHeaders.Update(cartFromDb);
             await _db.SaveChangesAsync();
             _res.Result = true;
         }
         catch (Exception ex)
         {
-
             _res.IsSuccess = false;
             _res.Message = ex.ToString();
         }
@@ -108,9 +107,9 @@ public class CartAPIController : ControllerBase
     {
         try
         {
-            var cartFromDb = await _db.CartHeader.FirstAsync(u => u.UserId == cartDTO.CartHeader.UserId);
+            var cartFromDb = await _db.CartHeaders.FirstAsync(u => u.UserId == cartDTO.CartHeader.UserId);
             cartFromDb.CouponCode = "";
-            _db.CartHeader.Update(cartFromDb);
+            _db.CartHeaders.Update(cartFromDb);
             await _db.SaveChangesAsync();
             _res.Result = true;
         }
@@ -129,14 +128,14 @@ public class CartAPIController : ControllerBase
     {
         try
         {
-            var cartHeaderFromDb = await _db.CartHeader
+            var cartHeaderFromDb = await _db.CartHeaders
                 .AsNoTracking()
                 .FirstOrDefaultAsync(u => u.UserId == cartDTO.CartHeader.UserId);
             if (cartHeaderFromDb == null)
             {
                 //Create new CH and CD
                 CartHeader cartHeader = _mapper.Map<CartHeader>(cartDTO.CartHeader);
-                _db.CartHeader.Add(cartHeader);
+                _db.CartHeaders.Add(cartHeader);
                 await _db.SaveChangesAsync();
                 cartDTO.CartDetails.First().CartHeaderId = cartHeader.CartHeaderId;
                 _db.CartDetails.Add(_mapper.Map<CartDetails>(cartDTO.CartDetails.First()));
@@ -178,7 +177,7 @@ public class CartAPIController : ControllerBase
     }
 
 
-    [HttpPost("CartRemove")]
+    [HttpPost("RemoveCart")]
     public async Task<ResponseDTO> RemoveCart([FromBody] int cartDetailsId)
     {
         try
@@ -193,8 +192,8 @@ public class CartAPIController : ControllerBase
             if (totalIteminCart == 1)
             {
                 //
-                var cartHeaderToRemove = await _db.CartHeader.FirstOrDefaultAsync(u => u.CartHeaderId == cartDetails.CartHeaderId);
-                _db.CartHeader.Remove(cartHeaderToRemove);
+                var cartHeaderToRemove = await _db.CartHeaders.FirstOrDefaultAsync(u => u.CartHeaderId == cartDetails.CartHeaderId);
+                _db.CartHeaders.Remove(cartHeaderToRemove);
             }
             await _db.SaveChangesAsync();
             _res.Result = true;

@@ -1,6 +1,4 @@
-﻿using Vin.Services.ShoppingCartAPI.Models.DTO;
-
-namespace Vin.Services.ShoppingCartAPI.Models
+﻿namespace Vin.Services.ShoppingCartAPI.Models.DTO
 {
     public class CartDetailsDTO
     {
