@@ -1,4 +1,5 @@
-﻿using Vin.Services.ShoppingCartAPI.Models.DTO;
+﻿
+using Vin.Services.ShoppingCartAPI.Models.DTO;
 
 namespace Vin.Services.ShoppingCartAPI.Service.IService
 {

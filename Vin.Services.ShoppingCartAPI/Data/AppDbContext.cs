@@ -9,7 +9,7 @@ namespace Vin.Services.ShoppingCartAPI.Data
         {
         }
 
-        public DbSet<CartHeader> CartHeader { get; set; }
+        public DbSet<CartHeader> CartHeaders { get; set; }
         public DbSet<CartDetails> CartDetails { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

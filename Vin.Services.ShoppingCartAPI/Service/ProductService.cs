@@ -33,10 +33,9 @@ namespace Vin.Services.ShoppingCartAPI.Service
             }
 
             var res = JsonConvert.DeserializeObject<ResponseDTO>(apiContent);
-            if (res?.IsSuccess == true && res.Result != null)
+            if (res != null && res.IsSuccess)
             {
-                return JsonConvert.DeserializeObject<IEnumerable<ProductDTO>>(
-                    Convert.ToString(res.Result)) ?? new List<ProductDTO>();
+                return JsonConvert.DeserializeObject<IEnumerable<ProductDTO>>(Convert.ToString(res.Result));
             }
 
             return new List<ProductDTO>();

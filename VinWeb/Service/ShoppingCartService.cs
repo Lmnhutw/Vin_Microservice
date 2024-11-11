@@ -20,7 +20,7 @@ namespace Vin.Web.Service
             {
                 ApiType = StaticDetail.ApiType.POST,
                 Data = cartDTO,
-                Url = $"{StaticDetail.ShoppingCartAPIBase}/api/Cart/AddShoppingCart"
+                Url = $"{StaticDetail.ShoppingCartAPIBase}/api/Cart/ApplyCoupon"
             });
         }
 
@@ -29,7 +29,7 @@ namespace Vin.Web.Service
         {
             return await _baseService.SendAsync(new RequestDTO()
             {
-                ApiType = StaticDetail.ApiType.POST,
+                ApiType = StaticDetail.ApiType.GET,
                 Url = $"{StaticDetail.ShoppingCartAPIBase}/api/Cart/GetCart/{userId}"
             });
         }
