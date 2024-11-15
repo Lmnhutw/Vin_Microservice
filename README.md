@@ -1,4 +1,4 @@
-<h1>VIN MICROSERVICE</h1>
+<h1>VIN E-COMMERCE MICROSERVICE</h1>
 
 <p>A comprehensive e-commerce platform built using .NET 8 with a modular architecture for handling various aspects of the shopping experience, from product management to checkout and order processing. This project includes microservices, integration with external services, and deployment on Azure.</p>
 
