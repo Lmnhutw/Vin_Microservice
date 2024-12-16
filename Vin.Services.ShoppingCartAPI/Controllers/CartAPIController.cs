@@ -89,7 +89,9 @@ public class CartAPIController : ControllerBase
         try
         {
             var cartFromDb = await _db.CartHeaders.FirstAsync(u => u.UserId == cartDto.CartHeader.UserId);
+
             cartFromDb.CouponCode = cartDto.CartHeader.CouponCode;
+            //cartFromDb.CouponCode = cartDto.CartHeader.MinAmount;
             _db.CartHeaders.Update(cartFromDb);
             await _db.SaveChangesAsync();
             _res.Result = true;

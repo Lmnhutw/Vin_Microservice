@@ -23,13 +23,13 @@
                             <div class="col-lg-2">
                             </div>
                             <div class="col-lg-5">
-                                Product Details
+                                <b>Product Details</b>
                             </div>
                             <div class="col-lg-2">
-                                Price
+                                <b>Price</b>
                             </div>
                             <div class="col-lg-2">
-                                Count
+                                <b>Count</b>
                             </div>
                             <div class="col-lg-1">
                             </div>
@@ -119,42 +119,23 @@ else
                             <div class="col-lg-2">
                             </div>
                             <div class="col-lg-5">
-                                Product Details
+                                <b>Product Details</b>
                             </div>
                             <div class="col-lg-2">
-                                Price
+                                <b>Price</b>
                             </div>
                             <div class="col-lg-2">
-                                Count
+                                <b>Count</b>
                             </div>
                             <div class="col-lg-1">
                             </div>
-                        </div>
-                    </div>
 
-                    
-                    
-                    <div class="row">
-                        <div class="col-6">
-                            @if (string.IsNullOrEmpty(Model.CartHeader.CouponCode))
-                            {
-                                <span>Coupon:</span>
-                                <input asp-for="CartHeader.CouponCode" />
-                                <button type="submit" asp-action="ApplyCoupon" class="btn btn-sm btn-success"> Apply </button>
-                            }
-                            else
-                            {
-                                <span>Coupon:</span>
-                                <input asp-for="CartHeader.CouponCode" disabled />
-                                <button type="submit" asp-action="RemoveCoupon" class="btn btn-sm btn-success"> Remove </button>
-                            }
+
                         </div>
-                        <div class="col-6 text-end">
-                            <span class="text-danger" style="font-size:21px;">Order Total:@string.Format("{0:N0} VND", Model.CartHeader.CartTotal)<br /></span>
-                            @if (Model.CartHeader.Discount > 0)
-                            {
-                                <span class="text-success"> Order Discount :   @string.Format("{0:N0}", Model.CartHeader.Discount) </span>
-                            }
+                        <div style="padding: 50px 0 50px 0">
+                            <h1>
+                                Oops, You don't have any product in your Cart! 
+                            </h1>
                         </div>
                     </div>
                 </div>
