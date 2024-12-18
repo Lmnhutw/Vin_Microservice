@@ -6,7 +6,7 @@ namespace Vin.MessageBus
 {
     public class MessageBus : IMessageBus
     {
-        private string connString = "Endpoint=sb://vinweb.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=CuFIprhi4kdIKQy4v4wocdnzMqMu/mT2W+ASbMH8WKs=";
+        private string connString = Environment.GetEnvironmentVariable("ServiceBusKey");
         public async Task PublishMessage(object message, string topic_queue_Name)
         {
             await using var client = new ServiceBusClient(connString);
