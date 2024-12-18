@@ -101,7 +101,7 @@
     <li>Create Azure App Services for each microservice. (Comming soon)</li>
     <li>Set up Azure SQL Database and configure connection strings. (Comming soon)</li>
     <li>Enable Continuous Deployment from GitHub or other version control. (Comming soon)</li>
-    <li>Configure Azure Service Bus and RabbitMQ for inter-service communication. (Comming soon)</li>
+    <li>Configure Azure Service Bus and RabbitMQ for inter-service communication. (WIP)</li>
 </ol>
 
 <h2 id="future-enhancements">Future Enhancements</h2>
