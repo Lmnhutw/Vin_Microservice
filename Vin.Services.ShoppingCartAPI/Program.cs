@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Vin.MessageBus;
 using Vin.Services.ShoppingCartAPI;
 using Vin.Services.ShoppingCartAPI.Data;
 using Vin.Services.ShoppingCartAPI.Service;
@@ -31,6 +32,8 @@ builder.Services.AddHttpClient("GetCoupon",
 builder.Services.AddScoped<AuthenticatedHttpClientHandler>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ICouponService, CouponService>();
+builder.Services.AddScoped<IMessageBus, MessageBus>();
+
 builder.Services.AddHttpContextAccessor();
 
 

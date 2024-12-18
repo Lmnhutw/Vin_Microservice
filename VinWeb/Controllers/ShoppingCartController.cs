@@ -46,6 +46,23 @@ namespace Vin.Web.Controllers
             else
             {
                 _toastNotification.AddErrorToastMessage(response?.Message ?? "Failed to apply coupon");
+                return View();
+            }
+            return RedirectToAction(nameof(CartIndex));
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EmailCart(CartDTO cartDTO)
+        {
+            ResponseDTO? response = await _shoppingCartService.EmailCart(cartDTO);
+            if (response != null && response.IsSuccess)
+            {
+                _toastNotification.AddSuccessToastMessage("Email is sending...");
+            }
+            else
+            {
+                _toastNotification.AddErrorToastMessage(response?.Message ?? "Failed to sent email");
+                return View();
             }
             return RedirectToAction(nameof(CartIndex));
         }
@@ -62,6 +79,7 @@ namespace Vin.Web.Controllers
             else
             {
                 _toastNotification.AddErrorToastMessage(response?.Message ?? "Failed to remove coupon");
+                return View();
             }
             return RedirectToAction(nameof(CartIndex));
         }

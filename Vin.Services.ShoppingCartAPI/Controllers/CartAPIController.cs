@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Vin.MessageBus;
 using Vin.Services.ShoppingCartAPI.Data;
 using Vin.Services.ShoppingCartAPI.Models;
 using Vin.Services.ShoppingCartAPI.Models.DTO;
@@ -15,15 +16,19 @@ public class CartAPIController : ControllerBase
     private readonly AppDbContext _db;
     private readonly IProductService _productService;
     private readonly ICouponService _couponService;
+    private readonly IMessageBus _messageBus;
+    private readonly IConfiguration _configuration;
 
 
-    public CartAPIController(AppDbContext db, IMapper mapper, IProductService productService, ICouponService couponService)
+    public CartAPIController(AppDbContext db, IMapper mapper, IProductService productService, ICouponService couponService, IMessageBus messageBus, IConfiguration configuration)
     {
         _db = db;
         _res = new ResponseDTO();
         _mapper = mapper;
         _productService = productService;
         _couponService = couponService;
+        _messageBus = messageBus;
+        _configuration = configuration;
     }
 
     [HttpGet("GetCart/{userID}")]
@@ -94,6 +99,22 @@ public class CartAPIController : ControllerBase
             //cartFromDb.CouponCode = cartDto.CartHeader.MinAmount;
             _db.CartHeaders.Update(cartFromDb);
             await _db.SaveChangesAsync();
+            _res.Result = true;
+        }
+        catch (Exception ex)
+        {
+            _res.IsSuccess = false;
+            _res.Message = ex.ToString();
+        }
+        return _res;
+    }
+
+    [HttpPost("EmailCartRequest")]
+    public async Task<object> EmailCartRequest([FromBody] CartDTO cartDto)
+    {
+        try
+        {
+            await _messageBus.PublishMessage(cartDto, _configuration.GetValue<string>("TopicAndQueueNames:EmailShoppingCart"));
             _res.Result = true;
         }
         catch (Exception ex)

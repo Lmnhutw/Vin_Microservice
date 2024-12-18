@@ -24,6 +24,15 @@ namespace Vin.Web.Service
             });
         }
 
+        public async Task<ResponseDTO?> EmailCart(CartDTO cartDTO)
+        {
+            return await _baseService.SendAsync(new RequestDTO()
+            {
+                ApiType = StaticDetail.ApiType.POST,
+                Data = cartDTO,
+                Url = $"{StaticDetail.ShoppingCartAPIBase}/api/Cart/EmailCartRequest"
+            });
+        }
 
         public async Task<ResponseDTO?> GetCartByUserIdAsync(string userId)
         {

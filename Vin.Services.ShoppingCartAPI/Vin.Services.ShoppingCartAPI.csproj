@@ -21,5 +21,9 @@
 	  <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Vin.MessageBus\Vin.MessageBus.csproj" />
+  </ItemGroup>
+
  
 </Project>
