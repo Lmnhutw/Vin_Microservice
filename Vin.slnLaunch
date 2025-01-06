@@ -1,0 +1,27 @@
+[
+  {
+    "Name": "VinWeb_Microservice",
+    "Projects": [
+      {
+        "Path": "Vin.Services.CouponAPI\\Vin.Services.CouponAPI.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "VinWeb\\Vin.Web.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "Vin.Services.AuthAPI\\Vin.Services.AuthAPI.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "Vin.Services.ProductAPI\\Vin.Services.ProductAPI.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "Vin.Services.ShoppingCartAPI\\Vin.Services.ShoppingCartAPI.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]
