@@ -77,7 +77,9 @@
         </ul>
     </li>
     <li><strong>Database Setup</strong>:
-        <pre><code>dotnet ef database update</code></pre>
+        <ul>
+           <li>  Change the Sqlconnection to your connection then go to the next step. (It will auto-migrate and create a new Database - You can look it up in each program.cs of each service)</li>
+        </ul>
     </li>
     <li><strong>Run Services</strong> - Start individual services or the whole solution using Visual Studio or command line.</li>
 </ol>
