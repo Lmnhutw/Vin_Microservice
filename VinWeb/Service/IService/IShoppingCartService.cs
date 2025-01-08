@@ -11,6 +11,7 @@ namespace Vin.Web.Service.IService
         Task<ResponseDTO?> RemoveFromCartAsync(int cartDetailsId);
 
         Task<ResponseDTO?> ApplyCouponAsync(CartDTO cartDTO);
+
         Task<ResponseDTO?> EmailCart(CartDTO cartDTO);
 
     }

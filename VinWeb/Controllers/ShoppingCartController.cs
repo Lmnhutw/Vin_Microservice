@@ -54,7 +54,9 @@ namespace Vin.Web.Controllers
         [HttpPost]
         public async Task<IActionResult> EmailCart(CartDTO cartDTO)
         {
-            ResponseDTO? response = await _shoppingCartService.EmailCart(cartDTO);
+            CartDTO cart = await LoadCartDTOBasedOnLoggedInUser();
+            cart.CartHeader.Email = User.Claims.Where(u => u.Type == JwtRegisteredClaimNames.Email)?.FirstOrDefault()?.Value;
+            ResponseDTO? response = await _shoppingCartService.EmailCart(cart);
             if (response != null && response.IsSuccess)
             {
                 _toastNotification.AddSuccessToastMessage("Email is sending...");
@@ -62,7 +64,7 @@ namespace Vin.Web.Controllers
             else
             {
                 _toastNotification.AddErrorToastMessage(response?.Message ?? "Failed to sent email");
-                return View();
+                return View("CartIndex");
             }
             return RedirectToAction(nameof(CartIndex));
         }
