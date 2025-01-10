@@ -4,10 +4,12 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <UserSecretsId>397382e2-abe1-40ad-9063-bdc12b9d2a8e</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Azure.Messaging.ServiceBus" Version="7.18.2" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="6.0.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 
