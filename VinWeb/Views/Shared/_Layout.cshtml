@@ -27,21 +27,24 @@
                         <li class="nav-item">
                             <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
-                              
-                        
-                        <li class="nav-item dropdown">
 
-                            <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Content Management</a>
-                        <div class="dropdown-menu">                                                           
-                                     <a class="dropdown-item" style=" padding-right: 8px ;padding-left: 8px; border-radius: inherit" asp-controller="Coupon" asp-action="CouponIndex">Coupon</a>                                
-                                     <a class="dropdown-item" style=" padding-right: 8px ;padding-left: 8px; border-radius: inherit" asp-controller="Product" asp-action="ProductIndex">Product</a>                           
-                        </div>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link " asp-area="" asp-controller="Order" asp-action="OrderIndex">
-                                Manage Order
-                            </a>
-                        </li>
+
+                        @if (User.IsInRole("ADMIN"))
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Content Management</a>
+                                <div class="dropdown-menu">
+                                    <a class="dropdown-item" style="padding-right: 8px; padding-left: 8px; border-radius: inherit" asp-controller="Coupon" asp-action="CouponIndex">Coupon</a>
+                                    <a class="dropdown-item" style="padding-right: 8px; padding-left: 8px; border-radius: inherit" asp-controller="Product" asp-action="ProductIndex">Product</a>
+                                </div>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link " asp-area="" asp-controller="Order" asp-action="OrderIndex">
+                                    Manage Order
+                                </a>
+                            </li>
+                        }
+                        
                         <li class="nav-item">
                             <a class="nav-link " asp-area="" asp-controller="ShoppingCart" asp-action="CartIndex">
                                 &nbsp; <i class="bi bi-cart"></i>&nbsp;

@@ -1,7 +1,8 @@
 ﻿@using Vin.Web.Models.CartModels
 
 @model CartDTO
-@if (Model.CartHeader != null && Model.CartDetails?.Count() > 0)
+@* @if (Model.CartHeader != null && Model.CartDetails?.Count() > 0) *@
+    @if (Model?.CartHeader != null && Model.CartDetails != null && Model.CartDetails.Any())
 {
     <form method="post" asp-action="EmailCart">
         <br />

@@ -74,8 +74,9 @@ public class CartAPIController : ControllerBase
                     }
 
                 }
+                _res.Message = "The Coupon you just type in is not available, please try another one.";
             }
-            _res.Message = "The Coupon you just type in is not available, please try another one.";
+
 
             _res.Result = cart;
         }
@@ -114,6 +115,7 @@ public class CartAPIController : ControllerBase
     {
         try
         {
+
             await _messageBus.PublishMessage(cartDto, _configuration.GetValue<string>("TopicAndQueueNames:EmailShoppingCartQueue"));
             _res.Result = true;
         }

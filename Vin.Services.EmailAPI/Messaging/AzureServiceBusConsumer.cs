@@ -2,6 +2,7 @@
 using Azure.Messaging.ServiceBus;
 using Newtonsoft.Json;
 using Vin.Services.EmailAPI.Models.Dto;
+using Vin.Services.EmailAPI.Services;
 
 namespace Vin.Services.EmailAPI.Messaging
 {
@@ -13,21 +14,24 @@ namespace Vin.Services.EmailAPI.Messaging
         //private readonly ILogger<AzureServiceBusConsumer> logger;
         private readonly IConfiguration _configuration;
         private ServiceBusProcessor _emailCartProcessor;
+        private readonly EmailService _emailService;
 
-        public AzureServiceBusConsumer(/*ILogger<AzureServiceBusConsumer> logger,*/ IConfiguration configuration)
+        public AzureServiceBusConsumer(/*ILogger<AzureServiceBusConsumer> logger,*/ IConfiguration configuration, EmailService emailService)
         {
             //this.logger = logger;
             _configuration = configuration;
             serviceBusConnnectionString = _configuration.GetValue<string>("ServiceBusConnectionString");
-            emailCartQueue = _configuration.GetValue<string>("EmailCartQueue");
+            emailCartQueue = _configuration.GetValue<string>("TopicAndQueueNames:EmailShoppingCartQueue");
             var client = new ServiceBusClient(serviceBusConnnectionString);
             _emailCartProcessor = client.CreateProcessor(emailCartQueue);
+            _emailService = emailService;
         }
 
         public async Task Start()
         {
             _emailCartProcessor.ProcessMessageAsync += OnEmailCartRequestReceived;
             _emailCartProcessor.ProcessErrorAsync += ErrorHandler;
+            await _emailCartProcessor.StartProcessingAsync();
         }
 
         private async Task OnEmailCartRequestReceived(ProcessMessageEventArgs args)
