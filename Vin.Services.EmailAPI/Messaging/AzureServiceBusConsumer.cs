@@ -8,7 +8,7 @@ namespace Vin.Services.EmailAPI.Messaging
 {
     public class AzureServiceBusConsumer : IAzureServiceBusConsumer
     {
-
+        private const string EmailCartQueueKey = "TopicAndQueueNames:EmailShoppingCartQueue";
         private readonly string serviceBusConnnectionString;
         private readonly string emailCartQueue;
         //private readonly ILogger<AzureServiceBusConsumer> logger;
@@ -21,7 +21,7 @@ namespace Vin.Services.EmailAPI.Messaging
             //this.logger = logger;
             _configuration = configuration;
             serviceBusConnnectionString = _configuration.GetValue<string>("ServiceBusConnectionString");
-            emailCartQueue = _configuration.GetValue<string>("TopicAndQueueNames:EmailShoppingCartQueue");
+            emailCartQueue = _configuration.GetValue<string>(EmailCartQueueKey);
             var client = new ServiceBusClient(serviceBusConnnectionString);
             _emailCartProcessor = client.CreateProcessor(emailCartQueue);
             _emailService = emailService;

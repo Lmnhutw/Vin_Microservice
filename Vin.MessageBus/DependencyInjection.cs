@@ -27,7 +27,7 @@ namespace Vin.MessageBus
             {
                 var logger = sp.GetRequiredService<ILogger<ServiceBusClient>>();
                 logger.LogInformation("Initializing ServiceBusClient...");
-                return new ServiceBusClient(serviceBusSettings.ConnectionString);
+                return new ServiceBusClient(serviceBusSettings.MsB_ConnectionString);
             });
 
             return services;
