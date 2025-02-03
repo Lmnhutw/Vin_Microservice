@@ -1,4 +1,4 @@
-﻿using Azure.Messaging.ServiceBus;
+﻿/*using Azure.Messaging.ServiceBus;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -13,7 +13,7 @@ namespace Vin.MessageBus
         private readonly ServiceBusClient _client;
 
 
-        /* public MessageBus(IConfiguration _configuration, ILogger<MessageBus> logger)
+        *//* public MessageBus(IConfiguration _configuration, ILogger<MessageBus> logger)
          {
              _logger = logger;
              _configuration = configuration;
@@ -27,7 +27,7 @@ namespace Vin.MessageBus
              }
 
              _logger.LogInformation("ServiceBusConnection is configured successfully.");
-         }*/
+         }*//*
 
         public async Task PublishMessageAsync<T>(T message, string queueOrTopicName)
         {
@@ -54,7 +54,7 @@ namespace Vin.MessageBus
         }
 
 
-        /* public async Task PublishMessage(object message, string topic_queue_Name)
+        *//* public async Task PublishMessage(object message, string topic_queue_Name)
          {
              try
              {
@@ -75,10 +75,11 @@ namespace Vin.MessageBus
                  _logger.LogError(ex, "Error sending message to {TopicQueueName}.", topic_queue_Name);
                  throw;
              }
-         }*/
+         }*//*
     }
 }
 
 
 
 
+*/
