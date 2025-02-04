@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Serilog;
 using Vin.MessageBus;
 using Vin.Services.ShoppingCartAPI;
 using Vin.Services.ShoppingCartAPI.Data;
@@ -32,7 +33,18 @@ builder.Services.AddHttpClient("GetCoupon",
 builder.Services.AddScoped<AuthenticatedHttpClientHandler>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ICouponService, CouponService>();
-builder.Services.AddScoped<IMessageBus, MessageBus>();
+
+
+// Register IMessageBus
+builder.Services.AddTransient<IMessageBus, MessageBus>();
+
+builder.Services.AddMessageBusService(configBuilder =>
+{
+    configBuilder.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+    configBuilder.AddUserSecrets<Program>();
+    configBuilder.AddEnvironmentVariables();
+});
+
 
 builder.Services.AddHttpContextAccessor();
 
@@ -66,6 +78,15 @@ builder.Services.AddSwaggerGen(option =>
     });
 });
 
+// Add this line at the beginning of the file to configure Serilog
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .CreateLogger();
+
+
+// Add this line to use Serilog as the logging provider
+builder.Host.UseSerilog();
+
 //Incase it cant regconize the apisettings, and usually it dont.
 var settingSection = builder.Configuration.GetSection("ApiSettings");
 
@@ -98,6 +119,8 @@ builder.Services.AddAuthentication(x =>
     };
 });
 
+
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -105,8 +128,15 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+    var endpoints = app.Services.GetRequiredService<IEnumerable<EndpointDataSource>>();
+    foreach (var endpoint in endpoints.SelectMany(es => es.Endpoints))
+    {
+
+        Log.Information(endpoint.DisplayName);
+    }
+
 }
-app.UseStaticFiles();
+
 
 app.UseHttpsRedirection();
 

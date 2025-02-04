@@ -1,34 +1,42 @@
-﻿using Azure.Messaging.ServiceBus;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Vin.MessageBus.Settings;
 
 namespace Vin.MessageBus
 {
     public static class DependencyInjection
     {
-        public static IServiceCollection AddMessageBusService(this IServiceCollection services, Action<IConfigurationBuilder> configure /*configuration*/)
+        public static IServiceCollection AddMessageBusService(
+            this IServiceCollection services,
+            Action<IConfigurationBuilder> configureConfiguration)
         {
-            // Build a new configuration for the library
-            var configurationBuilder = new ConfigurationBuilder();
-            configure(configurationBuilder); // Apply custom configuration
-            var configuration = configurationBuilder.Build();
+            // Create a configuration builder and inherit existing configuration
+            var configBuilder = new ConfigurationBuilder();
 
-            // Bind ServiceBusSettings from the custom configuration
-            var serviceBusSettings = new ServiceBusSettings();
-            configuration.GetSection("ServiceBus").Bind(serviceBusSettings);
+            // Apply the custom configuration sources provided by the main app
+            configureConfiguration(configBuilder);
 
-            // Register settings for DI
-            services.AddSingleton(serviceBusSettings);
+            // Build the configuration (merged)
+            var configuration = configBuilder.Build();
 
-            // Register Service Bus client
-            services.AddSingleton(sp =>
+            // Read Service Bus Connection String
+            var serviceBusSettings = new ServiceBusSettings
             {
-                var logger = sp.GetRequiredService<ILogger<ServiceBusClient>>();
-                logger.LogInformation("Initializing ServiceBusClient...");
-                return new ServiceBusClient(serviceBusSettings.MsB_ConnectionString);
-            });
+                MsB_ConnectionString = configuration["ServiceBus:ConnectionString"]
+                    ?? configuration.GetConnectionString("ServiceBusConnectionString")
+            };
+
+            // Validate configuration
+            if (string.IsNullOrWhiteSpace(serviceBusSettings.MsB_ConnectionString))
+            {
+                throw new InvalidOperationException(
+                    "Service Bus connection string is not configured. " +
+                    "Please set it in configuration under 'ServiceBus:ConnectionString' or in ConnectionStrings section.");
+            }
+
+            // Register settings in DI
+            services.AddSingleton(serviceBusSettings);
+            services.AddTransient<IMessageBus, MessageBus>();
 
             return services;
         }

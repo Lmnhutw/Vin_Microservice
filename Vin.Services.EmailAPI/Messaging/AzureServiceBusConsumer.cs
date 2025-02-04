@@ -20,7 +20,7 @@ namespace Vin.Services.EmailAPI.Messaging
         {
             //this.logger = logger;
             _configuration = configuration;
-            serviceBusConnnectionString = _configuration.GetValue<string>("ServiceBusConnectionString");
+            serviceBusConnnectionString = _configuration.GetValue<string>("ServiceBus:ConnectionString");
             emailCartQueue = _configuration.GetValue<string>(EmailCartQueueKey);
             var client = new ServiceBusClient(serviceBusConnnectionString);
             _emailCartProcessor = client.CreateProcessor(emailCartQueue);

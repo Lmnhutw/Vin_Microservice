@@ -115,17 +115,17 @@ public class CartAPIController : ControllerBase
     {
         try
         {
-
             await _messageBus.PublishMessageAsync(cartDto, _configuration.GetValue<string>("TopicAndQueueNames:EmailShoppingCartQueue"));
             _res.Result = true;
         }
         catch (Exception ex)
         {
             _res.IsSuccess = false;
-            _res.Message = ex.ToString();
+            _res.Message = "MessageBusFailure: " + ex.ToString();
         }
         return _res;
     }
+
 
     [HttpPost("RemoveCoupon")]
     public async Task<object> RemoveCoupon([FromBody] CartDTO cartDTO)
@@ -149,7 +149,7 @@ public class CartAPIController : ControllerBase
 
 
     [HttpPost("CartUpsert")]
-    public async Task<ResponseDTO> CartUpsert(CartDTO cartDTO)
+    public async Task<ActionResult<ResponseDTO>> CartUpsert(CartDTO cartDTO)
     {
         try
         {
@@ -158,7 +158,7 @@ public class CartAPIController : ControllerBase
                 .FirstOrDefaultAsync(u => u.UserId == cartDTO.CartHeader.UserId);
             if (cartHeaderFromDb == null)
             {
-                //Create new CH and CD
+                // Create new CartHeader and CartDetails
                 CartHeader cartHeader = _mapper.Map<CartHeader>(cartDTO.CartHeader);
                 _db.CartHeaders.Add(cartHeader);
                 await _db.SaveChangesAsync();
@@ -168,22 +168,22 @@ public class CartAPIController : ControllerBase
             }
             else
             {
-                //find CD, check if D has same Prd     
+                // Find CartDetails, check if it has the same Product
                 var cartDetailsFromDb = await _db.CartDetails
-                    .AsNoTracking().
-                    FirstOrDefaultAsync(u =>
-                    u.ProductId == cartDTO.CartDetails.First().ProductId &&
-                    u.CartHeaderId == cartHeaderFromDb.CartHeaderId);
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(u =>
+                        u.ProductId == cartDTO.CartDetails.First().ProductId &&
+                        u.CartHeaderId == cartHeaderFromDb.CartHeaderId);
                 if (cartDetailsFromDb == null)
                 {
-                    //create new CD
+                    // Create new CartDetails
                     cartDTO.CartDetails.First().CartHeaderId = cartHeaderFromDb.CartHeaderId;
                     _db.CartDetails.Add(_mapper.Map<CartDetails>(cartDTO.CartDetails.First()));
                     await _db.SaveChangesAsync();
                 }
                 else
                 {
-                    //update count in CD
+                    // Update count in CartDetails
                     cartDTO.CartDetails.First().Count += cartDetailsFromDb.Count;
                     cartDTO.CartDetails.First().CartHeaderId = cartDetailsFromDb.CartHeaderId;
                     cartDTO.CartDetails.First().CartDetailsId = cartDetailsFromDb.CartDetailsId;
@@ -191,15 +191,43 @@ public class CartAPIController : ControllerBase
                     await _db.SaveChangesAsync();
                 }
             }
-            _res.Result = cartDTO;
+
+            // Try to publish message to message bus
+            try
+            {
+                await _messageBus.PublishMessageAsync(cartDTO,
+                    _configuration.GetValue<string>("TopicAndQueueNames:EmailShoppingCartQueue"));
+            }
+            catch (Exception messageBusEx)
+            {
+                // Log the message bus error but don't fail the operation
+                return Ok(new ResponseDTO
+                {
+                    IsSuccess = true,
+                    Result = cartDTO,
+                    Message = "Cart updated successfully with notification delay",
+                    ErrorMessages = new List<string> { "MessageBusFailure: " + messageBusEx.Message }
+                });
+            }
+
+            return Ok(new ResponseDTO
+            {
+                IsSuccess = true,
+                Result = cartDTO,
+                Message = "Cart updated successfully"
+            });
         }
         catch (Exception ex)
         {
-            _res.Message = ex.Message.ToString();
-            _res.IsSuccess = false;
+            return StatusCode(500, new ResponseDTO
+            {
+                IsSuccess = false,
+                Message = "Failed to update cart",
+                ErrorMessages = new List<string> { ex.Message }
+            });
         }
-        return _res;
     }
+
 
 
     [HttpPost("RemoveCart")]

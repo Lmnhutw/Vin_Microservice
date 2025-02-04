@@ -80,26 +80,45 @@ namespace VinWeb.Controllers
                 ProductId = productDTO.ProductId,
             };
 
-            List<CartDetailsDTO> cartDetailsDTOs = new()
-            {
-                cartDetails
-            };
+            List<CartDetailsDTO> cartDetailsDTOs = new() { cartDetails };
             cartDTO.CartDetails = cartDetailsDTOs;
 
             ResponseDTO? response = await _shoppingCartService.UpsertCartAsync(cartDTO);
 
-            if (response != null && response.IsSuccess)
+            if (response != null)
             {
-                _toastNotification.AddSuccessToastMessage(response?.Message ?? "Loading successfully");
-                return RedirectToAction(nameof(Index));
+                if (response.IsSuccess)
+                {
+                    if (response.ErrorMessages?.Any(e => e.Contains("MessageBusFailure")) == true)
+                    {
+                        _toastNotification.AddWarningToastMessage(response.Message ?? "Item added to cart. Email notification might be delayed.");
+                    }
+                    else
+                    {
+                        _toastNotification.AddSuccessToastMessage(response.Message ?? "Item added to cart successfully");
+                    }
+                    return RedirectToAction(nameof(Index));
+                }
+                else
+                {
+                    _toastNotification.AddErrorToastMessage(response.Message ?? "Failed to add item to cart");
+                    if (response.ErrorMessages != null)
+                    {
+                        foreach (var error in response.ErrorMessages)
+                        {
+                            _toastNotification.AddErrorToastMessage(error);
+                        }
+                    }
+                }
             }
             else
             {
-                _toastNotification.AddErrorToastMessage(response?.Message ?? "Failed to load product information");
+                _toastNotification.AddErrorToastMessage("Failed to add item to cart. No response from server.");
             }
 
             return View(productDTO);
         }
+
 
         public IActionResult Privacy()
         {

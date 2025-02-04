@@ -25,10 +25,6 @@
       {
         "Path": "Vin.Services.EmailAPI\\Vin.Services.EmailAPI.csproj",
         "Action": "Start"
-      },
-      {
-        "Path": "Vin.MessageBus\\Vin.MessageBus.csproj",
-        "Action": "Start"
       }
     ]
   }

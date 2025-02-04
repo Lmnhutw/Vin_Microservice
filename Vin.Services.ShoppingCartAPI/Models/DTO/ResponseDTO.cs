@@ -1,4 +1,5 @@
-﻿namespace Vin.Services.ShoppingCartAPI.Models.DTO
+﻿
+namespace Vin.Services.ShoppingCartAPI.Models.DTO
 {
     public class ResponseDTO
     {
@@ -6,5 +7,6 @@
 
         public bool IsSuccess { get; set; } = true;
         public string Message { get; set; }
+        public List<string>? ErrorMessages { get; set; } = new();
     }
 }

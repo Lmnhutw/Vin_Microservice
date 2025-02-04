@@ -1,85 +1,72 @@
-﻿/*using Azure.Messaging.ServiceBus;
-using Microsoft.Extensions.Configuration;
+﻿using System.Text;
+using System.Text.Json;
+using Azure.Messaging.ServiceBus;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
+using Vin.MessageBus.Settings;
 
 namespace Vin.MessageBus
 {
-    public class MessageBus : IMessageBus
+    public class MessageBus : IMessageBus, IAsyncDisposable
     {
-        private readonly string _serviceBus;
+        private readonly ServiceBusSettings _serviceBusSettings;
         private readonly ILogger<MessageBus> _logger;
-        private readonly IConfiguration configuration;
         private readonly ServiceBusClient _client;
 
-
-        *//* public MessageBus(IConfiguration _configuration, ILogger<MessageBus> logger)
-         {
-             _logger = logger;
-             _configuration = configuration;
-             _serviceBus = configuration.GetValue<string>("ServiceBusConnection");
-
-
-             if (string.IsNullOrWhiteSpace(_serviceBus))
-             {
-                 _logger.LogError("ServiceBusConnection is not configured.");
-                 throw new InvalidOperationException("ServiceBusConnection is not configured.");
-             }
-
-             _logger.LogInformation("ServiceBusConnection is configured successfully.");
-         }*//*
-
-        public async Task PublishMessageAsync<T>(T message, string queueOrTopicName)
+        public MessageBus(ServiceBusSettings serviceBusSettings, ILogger<MessageBus> logger)
         {
-            var sender = _client.CreateSender(queueOrTopicName);
+            _serviceBusSettings = serviceBusSettings ??
+                throw new ArgumentNullException(nameof(serviceBusSettings));
+            _logger = logger;
+
+            if (string.IsNullOrWhiteSpace(_serviceBusSettings.MsB_ConnectionString))
+            {
+                throw new InvalidOperationException("Service Bus connection string is not configured.");
+            }
+
+            try
+            {
+                _client = new ServiceBusClient(_serviceBusSettings.MsB_ConnectionString);
+                _logger.LogInformation("ServiceBusClient initialized successfully");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to initialize ServiceBusClient");
+                throw;
+            }
+        }
+
+        public async Task PublishMessageAsync(object message, string topic_queue_Name)
+        {
+            if (_client == null)
+            {
+                throw new InvalidOperationException("ServiceBusClient is not initialized");
+            }
+
+            await using var sender = _client.CreateSender(topic_queue_Name);
 
             try
             {
                 var messageBody = JsonSerializer.Serialize(message);
-                var serviceBusMessage = new ServiceBusMessage(messageBody);
+                var serviceBusMessage = new ServiceBusMessage(Encoding.UTF8.GetBytes(messageBody))
+                {
+                    CorrelationId = Guid.NewGuid().ToString(),
+                    ContentType = "application/json"
+                };
 
-                _logger.LogInformation("Sending message to {QueueOrTopic}", queueOrTopicName);
+                _logger.LogInformation("Sending message to {topic_queue_Name}", topic_queue_Name);
                 await sender.SendMessageAsync(serviceBusMessage);
-                _logger.LogInformation("Message sent successfully to {QueueOrTopic}", queueOrTopicName);
+                _logger.LogInformation("Message sent successfully to {topic_queue_Name}", topic_queue_Name);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to send message to {QueueOrTopic}", queueOrTopicName);
+                _logger.LogError(ex, "Failed to send message to {topic_queue_Name}", topic_queue_Name);
                 throw;
-            }
-            finally
-            {
-                await sender.DisposeAsync();
             }
         }
 
-
-        *//* public async Task PublishMessage(object message, string topic_queue_Name)
-         {
-             try
-             {
-                 await using var client = new ServiceBusClient(_serviceBus);
-                 ServiceBusSender sender = client.CreateSender(topic_queue_Name);
-
-                 var jsonMessage = JsonConvert.SerializeObject(message);
-                 ServiceBusMessage finalMessage = new ServiceBusMessage(Encoding.UTF8.GetBytes(jsonMessage))
-                 {
-                     CorrelationId = Guid.NewGuid().ToString(),
-                 };
-
-                 await sender.SendMessageAsync(finalMessage);
-                 _logger.LogInformation("Message sent to {TopicQueueName} successfully.", topic_queue_Name);
-             }
-             catch (Exception ex)
-             {
-                 _logger.LogError(ex, "Error sending message to {TopicQueueName}.", topic_queue_Name);
-                 throw;
-             }
-         }*//*
+        public async ValueTask DisposeAsync()
+        {
+            await _client.DisposeAsync();
+        }
     }
 }
-
-
-
-
-*/
