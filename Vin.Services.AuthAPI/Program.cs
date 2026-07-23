@@ -10,9 +10,12 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
 //Connection to SQL
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("ConnectionStrings:DefaultConnection is not configured.");
+
 builder.Services.AddDbContext<AppDbContext>(option =>
 {
-    option.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+    option.UseSqlServer(connectionString);
 });
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<AppDbContext>().AddDefaultTokenProviders(); //register Identity,  ApplicationUser
@@ -20,7 +23,14 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFramework
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 builder.Services.AddScoped<IAuthService, AuthService>(); //register authService
 
-builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("ApiSettings:JwtOptions")); //register Jwt
+builder.Services.AddOptions<JwtOptions>()
+    .Bind(builder.Configuration.GetSection("ApiSettings:JwtOptions"))
+    .Validate(options =>
+        !string.IsNullOrWhiteSpace(options.Secret) &&
+        !string.IsNullOrWhiteSpace(options.Issuer) &&
+        !string.IsNullOrWhiteSpace(options.Audience),
+        "ApiSettings:JwtOptions must define Secret, Issuer and Audience.")
+    .ValidateOnStart();
 
 builder.Services.AddControllers();
 

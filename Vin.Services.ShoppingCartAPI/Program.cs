@@ -16,18 +16,19 @@ using Vin.Services.ShoppingCartAPI.Utility.Vin.Services.ShoppingCartAPI.Utility;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddDbContext<AppDbContext>(option => option.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("ConnectionStrings:DefaultConnection is not configured.");
+builder.Services.AddDbContext<AppDbContext>(option => option.UseSqlServer(connectionString));
 
 //Add auto mapper
 IMapper mapper = MappingConfig.RegisterMaps().CreateMapper();
 builder.Services.AddSingleton(mapper);
-builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 builder.Services.AddHttpClient("GetProduct",
-    u => u.BaseAddress = new Uri(builder.Configuration["ServiceUrls:ProductAPI"])).AddHttpMessageHandler<AuthenticatedHttpClientHandler>();
+    u => u.BaseAddress = new Uri(builder.Configuration["ServiceUrls:ProductAPI"] ?? throw new InvalidOperationException("ServiceUrls:ProductAPI is not configured."))).AddHttpMessageHandler<AuthenticatedHttpClientHandler>();
 
 builder.Services.AddHttpClient("GetCoupon",
-    u => u.BaseAddress = new Uri(builder.Configuration["ServiceUrls:CouponAPI"])).AddHttpMessageHandler<AuthenticatedHttpClientHandler>();
+    u => u.BaseAddress = new Uri(builder.Configuration["ServiceUrls:CouponAPI"] ?? throw new InvalidOperationException("ServiceUrls:CouponAPI is not configured."))).AddHttpMessageHandler<AuthenticatedHttpClientHandler>();
 
 
 builder.Services.AddScoped<AuthenticatedHttpClientHandler>();
@@ -36,12 +37,15 @@ builder.Services.AddScoped<ICouponService, CouponService>();
 
 
 // Register IMessageBus
-builder.Services.AddTransient<IMessageBus, MessageBus>();
+
 
 builder.Services.AddMessageBusService(configBuilder =>
 {
     configBuilder.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
-    configBuilder.AddUserSecrets<Program>();
+    if (builder.Environment.IsDevelopment())
+    {
+        configBuilder.AddUserSecrets<Program>();
+    }
     configBuilder.AddEnvironmentVariables();
 });
 
@@ -89,14 +93,13 @@ builder.Host.UseSerilog();
 
 //Incase it cant regconize the apisettings, and usually it dont.
 var settingSection = builder.Configuration.GetSection("ApiSettings");
-
-//Configure setting
-var secret = settingSection.GetValue<string>("Secret");
-var issurer = settingSection.GetValue<string>("Issuer");
-var audience = settingSection.GetValue<string>("Audience");
-
-//Create key and encoding base on 'secret'
-var key = Encoding.ASCII.GetBytes(secret);
+var secret = settingSection["Secret"]
+    ?? throw new InvalidOperationException("ApiSettings:Secret is not configured.");
+var issuer = settingSection["Issuer"]
+    ?? throw new InvalidOperationException("ApiSettings:Issuer is not configured.");
+var audience = settingSection["Audience"]
+    ?? throw new InvalidOperationException("ApiSettings:Audience is not configured.");
+var key = Encoding.UTF8.GetBytes(secret);
 
 builder.Services.AddAuthentication(x =>
 {
@@ -113,7 +116,7 @@ builder.Services.AddAuthentication(x =>
         ValidateIssuerSigningKey = true,
         IssuerSigningKey = new SymmetricSecurityKey(key), //the secret key just encoded before
         ValidateIssuer = true,
-        ValidIssuer = issurer,
+        ValidIssuer = issuer,
         ValidAudience = audience,
         ValidateAudience = true
     };
@@ -132,7 +135,10 @@ if (app.Environment.IsDevelopment())
     foreach (var endpoint in endpoints.SelectMany(es => es.Endpoints))
     {
 
-        Log.Information(endpoint.DisplayName);
+        if (!string.IsNullOrWhiteSpace(endpoint.DisplayName))
+        {
+            Log.Information("Mapped endpoint {Endpoint}", endpoint.DisplayName);
+        }
     }
 
 }

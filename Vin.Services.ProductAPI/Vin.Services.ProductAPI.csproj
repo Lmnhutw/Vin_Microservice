@@ -4,10 +4,11 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>f2bbd2e6-af5e-4466-8cb3-cc2c0cc560d5</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
-	  <PackageReference Include="AutoMapper" Version="13.0.1" />
+	  <PackageReference Include="AutoMapper" Version="16.2.0" />
 	  <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.10" />
 	  <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.10" />
 	  <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.10" />

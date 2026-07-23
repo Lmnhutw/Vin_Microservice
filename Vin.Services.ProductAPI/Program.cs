@@ -10,14 +10,16 @@ using Vin.Services.ProductAPI.Data;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("ConnectionStrings:DefaultConnection is not configured.");
+
 builder.Services.AddDbContext<AppDbContext>(option =>
 {
-    option.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+    option.UseSqlServer(connectionString);
 });
 
 IMapper mapper = MappingConfig.InstanceMaps().CreateMapper();
 builder.Services.AddSingleton(mapper);
-builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 builder.Services.AddControllers();
 
@@ -49,14 +51,13 @@ builder.Services.AddSwaggerGen(option =>
 
 //Incase it cant regconize the apisettings, and usually it dont.
 var settingSection = builder.Configuration.GetSection("ApiSettings");
-
-//Configure setting
-var secret = settingSection.GetValue<string>("Secret");
-var issurer = settingSection.GetValue<string>("Issuer");
-var audience = settingSection.GetValue<string>("Audience");
-
-//Create key and encoding base on 'secret'
-var key = Encoding.ASCII.GetBytes(secret);
+var secret = settingSection["Secret"]
+    ?? throw new InvalidOperationException("ApiSettings:Secret is not configured.");
+var issuer = settingSection["Issuer"]
+    ?? throw new InvalidOperationException("ApiSettings:Issuer is not configured.");
+var audience = settingSection["Audience"]
+    ?? throw new InvalidOperationException("ApiSettings:Audience is not configured.");
+var key = Encoding.UTF8.GetBytes(secret);
 
 builder.Services.AddAuthentication(x =>
 {
@@ -73,7 +74,7 @@ builder.Services.AddAuthentication(x =>
         ValidateIssuerSigningKey = true,
         IssuerSigningKey = new SymmetricSecurityKey(key), //the secret key just encoded before
         ValidateIssuer = true,
-        ValidIssuer = issurer,
+        ValidIssuer = issuer,
         ValidAudience = audience,
         ValidateAudience = true
     };

@@ -1,8 +1,8 @@
-﻿namespace Vin.Services.EmailAPI.Messaging
+namespace Vin.Services.EmailAPI.Messaging
 {
     public interface IAzureServiceBusConsumer
     {
-        Task Start();
-        Task Stop();
+        Task StartAsync(CancellationToken cancellationToken = default);
+        Task StopAsync(CancellationToken cancellationToken = default);
     }
 }

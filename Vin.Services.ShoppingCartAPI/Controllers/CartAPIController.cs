@@ -1,4 +1,7 @@
-﻿using AutoMapper;
+using AutoMapper;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Vin.MessageBus;
@@ -9,6 +12,7 @@ using Vin.Services.ShoppingCartAPI.Service.IService;
 
 [Route("api/Cart")]
 [ApiController]
+[Authorize]
 public class CartAPIController : ControllerBase
 {
     private readonly ResponseDTO _res;
@@ -17,7 +21,7 @@ public class CartAPIController : ControllerBase
     private readonly IProductService _productService;
     private readonly ICouponService _couponService;
     private readonly IMessageBus _messageBus;
-    private readonly IConfiguration _configuration;
+    private readonly string _emailShoppingCartQueue;
 
 
     public CartAPIController(AppDbContext db, IMapper mapper, IProductService productService, ICouponService couponService, IMessageBus messageBus, IConfiguration configuration)
@@ -28,17 +32,30 @@ public class CartAPIController : ControllerBase
         _productService = productService;
         _couponService = couponService;
         _messageBus = messageBus;
-        _configuration = configuration;
+        _emailShoppingCartQueue = configuration["TopicAndQueueNames:EmailShoppingCartQueue"]
+            ?? throw new InvalidOperationException("TopicAndQueueNames:EmailShoppingCartQueue is not configured.");
     }
 
     [HttpGet("GetCart/{userID}")]
-    public async Task<ResponseDTO> GetCart(string userID)
+    public async Task<ActionResult<ResponseDTO>> GetCart(string userID)
     {
         try
         {
+            var currentUserId = GetCurrentUserId();
+            if (!string.Equals(userID, currentUserId, StringComparison.Ordinal))
+            {
+                return Forbid();
+            }
+
+            var cartHeader = await _db.CartHeaders.FirstOrDefaultAsync(u => u.UserId == currentUserId);
+            if (cartHeader is null)
+            {
+                return NotFound(new ResponseDTO { IsSuccess = false, Message = "Cart not found." });
+            }
+
             CartDTO cart = new()
             {
-                CartHeader = _mapper.Map<CartHeaderDTO>(_db.CartHeaders.First(u => u.UserId == userID)),
+                CartHeader = _mapper.Map<CartHeaderDTO>(cartHeader),
             };
             cart.CartDetails = _mapper.Map<IEnumerable<CartDetailsDTO>>(_db.CartDetails
                 .Where(u => u.CartHeaderId == cart.CartHeader.CartHeaderId));
@@ -90,11 +107,21 @@ public class CartAPIController : ControllerBase
     }
 
     [HttpPost("ApplyCoupon")]
-    public async Task<object> ApplyCoupon([FromBody] CartDTO cartDto)
+    public async Task<ActionResult<ResponseDTO>> ApplyCoupon([FromBody] CartDTO cartDto)
     {
         try
         {
-            var cartFromDb = await _db.CartHeaders.FirstAsync(u => u.UserId == cartDto.CartHeader.UserId);
+            if (cartDto?.CartHeader is null)
+            {
+                return BadRequest(new ResponseDTO { IsSuccess = false, Message = "Cart header is required." });
+            }
+
+            var currentUserId = GetCurrentUserId();
+            var cartFromDb = await _db.CartHeaders.FirstOrDefaultAsync(u => u.UserId == currentUserId);
+            if (cartFromDb is null)
+            {
+                return NotFound(new ResponseDTO { IsSuccess = false, Message = "Cart not found." });
+            }
 
             cartFromDb.CouponCode = cartDto.CartHeader.CouponCode;
             //cartFromDb.CouponCode = cartDto.CartHeader.MinAmount;
@@ -115,7 +142,7 @@ public class CartAPIController : ControllerBase
     {
         try
         {
-            await _messageBus.PublishMessageAsync(cartDto, _configuration.GetValue<string>("TopicAndQueueNames:EmailShoppingCartQueue"));
+            await _messageBus.PublishMessageAsync(cartDto, _emailShoppingCartQueue);
             _res.Result = true;
         }
         catch (Exception ex)
@@ -128,11 +155,16 @@ public class CartAPIController : ControllerBase
 
 
     [HttpPost("RemoveCoupon")]
-    public async Task<object> RemoveCoupon([FromBody] CartDTO cartDTO)
+    public async Task<ActionResult<ResponseDTO>> RemoveCoupon([FromBody] CartDTO cartDTO)
     {
         try
         {
-            var cartFromDb = await _db.CartHeaders.FirstAsync(u => u.UserId == cartDTO.CartHeader.UserId);
+            var currentUserId = GetCurrentUserId();
+            var cartFromDb = await _db.CartHeaders.FirstOrDefaultAsync(u => u.UserId == currentUserId);
+            if (cartFromDb is null)
+            {
+                return NotFound(new ResponseDTO { IsSuccess = false, Message = "Cart not found." });
+            }
             cartFromDb.CouponCode = "";
             _db.CartHeaders.Update(cartFromDb);
             await _db.SaveChangesAsync();
@@ -153,6 +185,13 @@ public class CartAPIController : ControllerBase
     {
         try
         {
+            if (cartDTO?.CartHeader is null || cartDTO.CartDetails is null || !cartDTO.CartDetails.Any())
+            {
+                return BadRequest(new ResponseDTO { IsSuccess = false, Message = "Cart header and at least one cart item are required." });
+            }
+
+            cartDTO.CartHeader.UserId = GetCurrentUserId();
+
             var cartHeaderFromDb = await _db.CartHeaders
                 .AsNoTracking()
                 .FirstOrDefaultAsync(u => u.UserId == cartDTO.CartHeader.UserId);
@@ -196,7 +235,7 @@ public class CartAPIController : ControllerBase
             try
             {
                 await _messageBus.PublishMessageAsync(cartDTO,
-                    _configuration.GetValue<string>("TopicAndQueueNames:EmailShoppingCartQueue"));
+                    _emailShoppingCartQueue);
             }
             catch (Exception messageBusEx)
             {
@@ -231,11 +270,19 @@ public class CartAPIController : ControllerBase
 
 
     [HttpPost("RemoveCart")]
-    public async Task<ResponseDTO> RemoveCart([FromBody] int cartDetailsId)
+    public async Task<ActionResult<ResponseDTO>> RemoveCart([FromBody] int cartDetailsId)
     {
         try
         {
-            CartDetails cartDetails = await _db.CartDetails.FirstOrDefaultAsync(u => u.CartDetailsId == cartDetailsId);
+            var currentUserId = GetCurrentUserId();
+            CartDetails? cartDetails = await _db.CartDetails
+                .Include(u => u.CartHeader)
+                .FirstOrDefaultAsync(u => u.CartDetailsId == cartDetailsId && u.CartHeader.UserId == currentUserId);
+
+            if (cartDetails is null)
+            {
+                return NotFound(new ResponseDTO { IsSuccess = false, Message = "Cart item not found." });
+            }
 
             int totalIteminCart = _db.CartDetails
                 .Where(u => u.CartHeaderId == cartDetails.CartHeaderId).Count();
@@ -245,8 +292,7 @@ public class CartAPIController : ControllerBase
             if (totalIteminCart == 1)
             {
                 //
-                var cartHeaderToRemove = await _db.CartHeaders.FirstOrDefaultAsync(u => u.CartHeaderId == cartDetails.CartHeaderId);
-                _db.CartHeaders.Remove(cartHeaderToRemove);
+                _db.CartHeaders.Remove(cartDetails.CartHeader);
             }
             await _db.SaveChangesAsync();
             _res.Result = true;
@@ -262,4 +308,10 @@ public class CartAPIController : ControllerBase
 
 
 
+    private string GetCurrentUserId()
+    {
+        return User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub)
+            ?? throw new InvalidOperationException("Authenticated user id is missing.");
+    }
 }

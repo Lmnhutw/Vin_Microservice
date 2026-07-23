@@ -1,14 +1,9 @@
-﻿namespace Vin.MessageBus.Settings
+namespace Vin.MessageBus.Settings
 {
-    public class ServiceBusSettings
+    public sealed class ServiceBusSettings
     {
-        public string MsB_ConnectionString { get; set; }
-        public string QueueName { get; set; }
+        public string? MsB_ConnectionString { get; init; }
 
-        /*public bool IsConfigured()
-        {
-            return !string.IsNullOrWhiteSpace(MsB_ConnectionString) &&
-                   !string.IsNullOrWhiteSpace(QueueName);
-        }*/
+        public bool IsConfigured => !string.IsNullOrWhiteSpace(MsB_ConnectionString);
     }
 }

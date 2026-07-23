@@ -1,19 +1,18 @@
-﻿using AutoMapper;
+using AutoMapper;
+using Microsoft.Extensions.Logging.Abstractions;
 using Vin.Services.ShoppingCartAPI.Models;
 using Vin.Services.ShoppingCartAPI.Models.DTO;
 
 namespace Vin.Services.ShoppingCartAPI
 {
-    public class MappingConfig
+    public static class MappingConfig
     {
-        public static MapperConfiguration RegisterMaps()
-        {
-            var mappingConfig = new MapperConfiguration(config =>
+        public static MapperConfiguration RegisterMaps() => new(
+            config =>
             {
                 config.CreateMap<CartHeader, CartHeaderDTO>().ReverseMap();
                 config.CreateMap<CartDetails, CartDetailsDTO>().ReverseMap();
-            });
-            return mappingConfig;
-        }
+            },
+            NullLoggerFactory.Instance);
     }
 }

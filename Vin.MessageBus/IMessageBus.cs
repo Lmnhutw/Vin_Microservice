@@ -1,7 +1,10 @@
-﻿namespace Vin.MessageBus
+namespace Vin.MessageBus
 {
     public interface IMessageBus
     {
-        Task PublishMessageAsync(object message, string topic_queue_Name);
+        Task PublishMessageAsync(
+            object message,
+            string topicQueueName,
+            CancellationToken cancellationToken = default);
     }
 }

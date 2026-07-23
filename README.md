@@ -1,119 +1,102 @@
-<h1>VIN E-COMMERCE MICROSERVICE</h1>
+# Vin E-commerce Microservices
 
-<p>A comprehensive e-commerce platform built using .NET 8 with a modular architecture for handling various aspects of the shopping experience, from product management to checkout and order processing. This project includes microservices, integration with external services, and deployment on Azure.</p>
+Vin is a .NET 8 e-commerce solution with separate APIs for authentication, products, coupons, shopping carts, and email notifications, plus an ASP.NET MVC web client.
 
-<h2>Table of Contents</h2>
-<ol>
-    <li><a href="#project-overview">Project Overview</a></li>
-    <li><a href="#architecture">Architecture</a></li>
-    <li><a href="#features">Features</a></li>
-    <li><a href="#setup-instructions">Setup Instructions</a></li>
-    <li><a href="#project-structure">Project Structure</a></li>
-    <li><a href="#api-documentation">API Documentation</a></li>
-    <li><a href="#deployment">Deployment</a></li>
-    <li><a href="#future-enhancements">Future Enhancements</a></li>
-</ol>
+## Current architecture
 
-<h2 id="project-overview">Project Overview</h2>
-<p>This platform is designed to simulate a full e-commerce system. It includes APIs for handling products, coupons, user authentication, shopping cart operations, order processing, and more. Key integrations include:</p>
-<ul>
-    <li><strong>Stripe</strong> for payment processing (Comming soon)</li>
-    <li><strong>Azure</strong> for deployment and cloud services (Comming soon)</li>
-    <li><strong>RabbitMQ</strong> and <strong>Azure Service Bus</strong> for communication between microservices (Comming soon)</li>
-    <li><strong>SendGrid</strong> for email notifications (Working on)</li>
-</ul>
+- `Vin.Services.AuthAPI`: ASP.NET Identity, registration/login, roles, and JWT issuing.
+- `Vin.Services.ProductAPI`: product CRUD backed by SQL Server.
+- `Vin.Services.CouponAPI`: coupon CRUD backed by SQL Server.
+- `Vin.Services.ShoppingCartAPI`: cart operations, synchronous calls to Product/Coupon APIs, and optional Azure Service Bus publishing.
+- `Vin.Services.EmailAPI`: consumes cart messages when Service Bus is configured and persists email notification logs to SQL Server.
+- `Vin.MessageBus`: shared Azure Service Bus publisher infrastructure.
+- `VinWeb`: server-rendered ASP.NET MVC client that calls the APIs through typed/named HTTP clients.
 
-<h2 id="architecture">Architecture</h2>
-<p>The system is organized into several microservices, each responsible for specific functions such as product management, user authentication, and order processing. Communication between services is managed using message brokers like RabbitMQ and Azure Service Bus, ensuring scalability and fault tolerance.</p>
+Each API owns its EF Core `DbContext` and database migrations. The current solution does not yet contain an Order API, gateway, payment integration, RabbitMQ integration, or Azure deployment configuration.
+## FE flow and API contract
 
-<h3>Services and Components</h3>
-<ul>
-    <li><strong>AuthAPI</strong>: Manages user registration, login, and role assignment.</li>
-    <li><strong>ProductAPI</strong>: Handles product CRUD operations.</li>
-    <li><strong>CartAPI</strong>: Manages the shopping cart and applies coupon codes.</li>
-    <li><strong>OrderAPI</strong>: Processes orders and manages their status.</li>
-    <li><strong>EmailAPI</strong>: Sends transactional emails such as order confirmations and password resets.</li>
-    <li><strong>Gateway</strong>: Acts as an entry point for routing requests to appropriate services.</li>
-    <li><strong>Client Application</strong>: A web front-end that interacts with APIs and manages the UI for end-users.</li>
-</ul>
+VinWeb is an ASP.NET Core MVC/Razor client, not a separate SPA. Its main flow is:
 
-<h2 id="features">Features</h2>
-<ol>
-    <li><strong>User Authentication</strong> (AuthAPI)
-        <ul>
-            <li>Register, login, password reset, and role assignment</li>
-            <li>Token-based authentication with JWT</li>
-        </ul>
-    </li>
-    <li><strong>Product Management</strong> (ProductAPI) - CRUD operations for products</li>
-    <li><strong>Coupon Management</strong> (CouponAPI) - CRUD for coupons and applying discounts</li>
-    <li><strong>Shopping Cart</strong> (CartAPI and Cart Web Integration)
-        <ul>
-            <li>Add, update, and remove products in the cart</li>
-            <li>Apply coupon codes for discounts</li>
-        </ul>
-    </li>
-    <li><strong>Order Management</strong> (OrderAPI) - Checkout flow, order creation, and tracking. (Comming soon)</li>
-    <li><strong>Payment Processing</strong> (Stripe Integration) - Secure checkout with Stripe. (Comming soon)</li>
-    <li><strong>Email Notifications</strong> (EmailAPI) - Automated emails using SendGrid. (Working on)</li>
-    <li><strong>Service Bus and Message Queueing</strong> - RabbitMQ and Azure Service Bus for async communication between services. (Working on Service Bus)</li>
-    <li><strong>Azure Deployment</strong> - Full deployment on Azure, utilizing services like App Services, SQL Database, and Blob Storage. (Comming soon)</li>
-</ol>
+~~~text
+Razor View
+  -> VinWeb Controller
+  -> VinWeb Service
+  -> BaseService.SendAsync
+  -> API ResponseDTO
+~~~
 
-<h2 id="setup-instructions">Setup Instructions</h2>
-<ol>
-    <li><strong>Clone the repository</strong>:
-        <pre><code>git clone &lt;repository-url&gt;</code></pre>
-    </li>
-    <li><strong>Install dependencies</strong>:
-        <ul>
-            <li>Ensure you have .NET 8 SDK installed.</li>
-            <li>Install NuGet packages by restoring the solution.</li>
-        </ul>
-    </li>
-    <li><strong>Configure Environment Variables</strong>:
-        <ul>
-            <li>Configure API keys and secrets for SendGrid, Stripe, and Azure in environment files or Azure App Service settings.</li>
-        </ul>
-    </li>
-    <li><strong>Database Setup</strong>:
-        <ul>
-           <li>  Change the Sqlconnection to your connection then go to the next step. (It will auto-migrate and create a new Database - You can look it up in each program.cs of each service)</li>
-        </ul>
-    </li>
-    <li><strong>Run Services</strong> - Start individual services or the whole solution using Visual Studio or command line.</li>
-</ol>
+The implemented user flows are:
 
-<h2 id="project-structure">Project Structure</h2>
-<ul>
-    <li><strong>Vin.Services.AuthAPI</strong>: Handles authentication and authorization.</li>
-    <li><strong>Vin.Services.ProductAPI</strong>: Product catalog with endpoints for product data.</li>
-    <li><strong>Vin.Services.ShoppingCartAPI</strong>: Manages cart operations and coupon applications.</li>
-    <li><strong>Vin.Services.OrderAPI</strong>: Processes and manages orders.</li>
-    <li><strong>Vin.Services.EmailAPI</strong>: Sends transactional emails.</li>
-    <li><strong>Vin.Web</strong>: Client-side project for user interactions.</li>
-</ul>
+- Authentication: register, login, forgot password, and reset password.
+- Catalog: product listing, details, create, update, and delete.
+- Cart: load cart, add/update item, remove item, apply/remove coupon, and email cart.
+- Administration: product and coupon write operations are protected by API roles.
 
-<h2 id="api-documentation">API Documentation</h2>
-<p>API endpoints are documented in Swagger. Each microservice has its own Swagger UI for testing and exploring endpoints.</p>
+The Cart API now enforces the authenticated JWT subject as the cart owner. It does not trust a caller-provided UserId or a route user ID, returns 403 for cross-user access, and validates missing cart headers/items before persistence. VinWeb/Service/BaseService.cs also accepts JSON-compatible response media types and evaluates HTTP error status before applying the successful-response content-type guard.
 
-<h2 id="deployment">Deployment</h2>
-<p>Deployment is set up on <strong>Azure</strong>. Steps include:</p>
-<ol>
-    <li>Create Azure App Services for each microservice. (Comming soon)</li>
-    <li>Set up Azure SQL Database and configure connection strings. (Comming soon)</li>
-    <li>Enable Continuous Deployment from GitHub or other version control. (Comming soon)</li>
-    <li>Configure Azure Service Bus and RabbitMQ for inter-service communication. (WIP)</li>
-</ol>
+The FE and BE should be treated as one contract boundary: keep route names, HTTP methods, DTO property names, ResponseDTO, and 400/401/403/404/500 behavior synchronized when changing either side.
 
-<h2 id="future-enhancements">Future Enhancements</h2>
-<ul>
-    <li>Implementing <strong>Rewards API</strong> for loyalty points and rewards management.</li>
-    <li>Adding an <strong>Admin Dashboard</strong> for managing products, orders, and users.</li>
-    <li>Expanding <strong>Order Management</strong> with advanced tracking and reporting.</li>
-    <li>Enhancing <strong>Checkout Experience</strong> with additional payment options.</li>
-    <li>Integrating additional <strong>Message Queueing</strong> systems for redundancy.</li>
-</ul>
+## Local configuration
 
-</body>
-</html>
+Secrets and connection strings are intentionally not stored in tracked `appsettings.json` files. Configure them with User Secrets or environment variables.
+
+Example for AuthAPI:
+
+```powershell
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=localhost;Database=Vin_Auth;Trusted_Connection=True;TrustServerCertificate=True" --project Vin.Services.AuthAPI
+dotnet user-secrets set "ApiSettings:JwtOptions:Secret" "<generated-secret>" --project Vin.Services.AuthAPI
+dotnet user-secrets set "ApiSettings:JwtOptions:Issuer" "vin-auth-api" --project Vin.Services.AuthAPI
+dotnet user-secrets set "ApiSettings:JwtOptions:Audience" "vin-client" --project Vin.Services.AuthAPI
+```
+
+For ProductAPI and CouponAPI, use `ApiSettings:Secret`, `ApiSettings:Issuer`, and `ApiSettings:Audience`. For ShoppingCartAPI and EmailAPI, also configure:
+
+```powershell
+dotnet user-secrets set "ServiceBus:ConnectionString" "<service-bus-connection-string>" --project Vin.Services.ShoppingCartAPI
+dotnet user-secrets set "ServiceBus:ConnectionString" "<service-bus-connection-string>" --project Vin.Services.EmailAPI
+```
+
+When the Azure Service Bus setting is absent, the APIs can start in local/degraded mode. Publishing and the EmailAPI consumer remain disabled until the setting is provided.
+
+## Run and verify
+
+```powershell
+dotnet restore Vin.sln
+dotnet build Vin.sln
+dotnet run --project Vin.Services.AuthAPI
+dotnet run --project Vin.Services.ProductAPI
+dotnet run --project Vin.Services.CouponAPI
+dotnet run --project Vin.Services.ShoppingCartAPI
+dotnet run --project Vin.Services.EmailAPI
+dotnet run --project VinWeb
+```
+
+The APIs expose Swagger in Development. Database migrations are applied by each API at startup when its SQL Server connection is configured.
+For a solution-level verification pass:
+
+~~~powershell
+dotnet build Vin.sln --no-restore
+git diff --check
+node .gitnexus/run.cjs analyze
+~~~
+
+GitNexus currently reports that its LadybugDB FTS extension is unavailable; graph indexing still succeeds, but full-text/BM25 search remains disabled until the extension is installed.
+
+## Reliability and security notes
+
+- Rotate any JWT secret that was previously committed to Git.
+- Keep SQL Server, Service Bus, SendGrid, and other provider credentials in User Secrets or a managed secret store.
+- Message Bus logs metadata only; it does not log connection-string fragments or message bodies.
+- EmailAPI uses an `IHostedService` for Service Bus lifecycle and an `IDbContextFactory` for background database work.
+- Invalid email-cart messages are dead-lettered; processing failures are rethrown so Service Bus can retry them.
+- The current EmailAPI persists notification logs. A real email delivery provider can be added later without changing the message consumer contract.
+- Cart endpoints require JWT authentication and scope cart reads/writes to the authenticated user.
+- BaseService.SendAsync is a shared FE boundary used by authentication, product, coupon, and cart flows; changes to it require full-solution verification.
+
+## Future work
+
+1. Add FE-BE integration tests for login, cart ownership, coupon failures, token expiry, and message-bus failure handling.
+2. Normalize all APIs on a documented ProblemDetails/ResponseDTO error contract.
+3. Add an email delivery adapter and idempotency strategy.
+4. Add OrderAPI and payment workflow after the core boundaries are stable.
+5. Revisit Azure deployment and managed secret storage when the subscription is available.

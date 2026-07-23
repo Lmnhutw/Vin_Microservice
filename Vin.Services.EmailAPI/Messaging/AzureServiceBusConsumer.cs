@@ -1,69 +1,121 @@
-﻿using System.Text;
+using System.Text;
+using System.Text.Json;
 using Azure.Messaging.ServiceBus;
-using Newtonsoft.Json;
 using Vin.Services.EmailAPI.Models.Dto;
 using Vin.Services.EmailAPI.Services;
 
 namespace Vin.Services.EmailAPI.Messaging
 {
-    public class AzureServiceBusConsumer : IAzureServiceBusConsumer
+    public sealed class AzureServiceBusConsumer : IAzureServiceBusConsumer, IAsyncDisposable
     {
-        private const string EmailCartQueueKey = "TopicAndQueueNames:EmailShoppingCartQueue";
-        private readonly string serviceBusConnnectionString;
-        private readonly string emailCartQueue;
-        //private readonly ILogger<AzureServiceBusConsumer> logger;
-        private readonly IConfiguration _configuration;
-        private ServiceBusProcessor _emailCartProcessor;
-        private readonly EmailService _emailService;
+        private readonly string _emailCartQueue;
+        private readonly ILogger<AzureServiceBusConsumer> _logger;
+        private readonly ServiceBusClient _client;
+        private readonly ServiceBusProcessor _emailCartProcessor;
+        private readonly IEmailService _emailService;
 
-        public AzureServiceBusConsumer(/*ILogger<AzureServiceBusConsumer> logger,*/ IConfiguration configuration, EmailService emailService)
+        public AzureServiceBusConsumer(
+            IConfiguration configuration,
+            ILogger<AzureServiceBusConsumer> logger,
+            IEmailService emailService)
         {
-            //this.logger = logger;
-            _configuration = configuration;
-            serviceBusConnnectionString = _configuration.GetValue<string>("ServiceBus:ConnectionString");
-            emailCartQueue = _configuration.GetValue<string>(EmailCartQueueKey);
-            var client = new ServiceBusClient(serviceBusConnnectionString);
-            _emailCartProcessor = client.CreateProcessor(emailCartQueue);
-            _emailService = emailService;
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
+
+            _emailCartQueue = configuration["TopicAndQueueNames:EmailShoppingCartQueue"]
+                ?? throw new InvalidOperationException(
+                    "Configuration is missing TopicAndQueueNames:EmailShoppingCartQueue.");
+
+            var connectionString = configuration["ServiceBus:ConnectionString"]
+                ?? throw new InvalidOperationException(
+                    "Configuration is missing ServiceBus:ConnectionString.");
+
+            _client = new ServiceBusClient(connectionString);
+            _emailCartProcessor = _client.CreateProcessor(
+                _emailCartQueue,
+                new ServiceBusProcessorOptions
+                {
+                    MaxConcurrentCalls = 1,
+                    AutoCompleteMessages = false
+                });
         }
 
-        public async Task Start()
+        public async Task StartAsync(CancellationToken cancellationToken = default)
         {
             _emailCartProcessor.ProcessMessageAsync += OnEmailCartRequestReceived;
             _emailCartProcessor.ProcessErrorAsync += ErrorHandler;
-            await _emailCartProcessor.StartProcessingAsync();
+            await _emailCartProcessor.StartProcessingAsync(cancellationToken);
+
+            _logger.LogInformation(
+                "Started Azure Service Bus consumer for queue {QueueName}",
+                _emailCartQueue);
         }
 
         private async Task OnEmailCartRequestReceived(ProcessMessageEventArgs args)
         {
             var message = args.Message;
-            var body = Encoding.UTF8.GetString(message.Body);
+            _logger.LogInformation(
+                "Received email-cart message with correlation {CorrelationId}",
+                message.CorrelationId);
 
-            CartDTO objMessage = JsonConvert.DeserializeObject<CartDTO>(body);
             try
             {
-                //TODO - try to log eamil
-                await args.CompleteMessageAsync(args.Message);
+                var body = Encoding.UTF8.GetString(message.Body);
+                var cartDto = JsonSerializer.Deserialize<CartDTO>(body);
+
+                if (cartDto?.CartHeader is null || string.IsNullOrWhiteSpace(cartDto.CartHeader.Email))
+                {
+                    await args.DeadLetterMessageAsync(
+                        message,
+                        "Invalid cart message",
+                        "CartHeader and CartHeader.Email are required.");
+                    return;
+                }
+
+                await _emailService.SendEmailAsync(cartDto);
+                await args.CompleteMessageAsync(message);
+
+                _logger.LogInformation(
+                    "Completed email-cart message {CorrelationId}",
+                    message.CorrelationId);
             }
-            catch (Exception ex)
+            catch (JsonException exception)
             {
-
-                throw ex;
+                _logger.LogError(exception, "Email-cart message payload is invalid");
+                await args.DeadLetterMessageAsync(
+                    message,
+                    "Deserialization failed",
+                    exception.Message);
             }
-        }
-
-        public async Task Stop()
-        {
-
-            await _emailCartProcessor.StopProcessingAsync();
-            await _emailCartProcessor.DisposeAsync();
+            catch (Exception exception)
+            {
+                _logger.LogError(
+                    exception,
+                    "Email-cart message processing failed; message will be retried");
+                throw;
+            }
         }
 
         private Task ErrorHandler(ProcessErrorEventArgs args)
         {
-            Console.WriteLine(args.Exception.ToString());
+            _logger.LogError(
+                args.Exception,
+                "Azure Service Bus processor error. Entity={EntityPath}, Source={ErrorSource}",
+                args.EntityPath,
+                args.ErrorSource);
             return Task.CompletedTask;
         }
 
+        public async Task StopAsync(CancellationToken cancellationToken = default)
+        {
+            await _emailCartProcessor.StopProcessingAsync(cancellationToken);
+            _logger.LogInformation("Stopped Azure Service Bus consumer for queue {QueueName}", _emailCartQueue);
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            await _emailCartProcessor.DisposeAsync();
+            await _client.DisposeAsync();
+        }
     }
 }

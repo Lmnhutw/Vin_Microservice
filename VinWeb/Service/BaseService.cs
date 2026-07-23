@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 using System.Text;
 using Newtonsoft.Json;
 using Vin.Web.Models;
@@ -258,7 +258,7 @@ public class BaseService : IBaseService
 
             // First, check content type
             var contentType = apiResponse.Content.Headers.ContentType?.MediaType;
-            if (contentType != "application/json")
+            if (apiResponse.IsSuccessStatusCode && !((string.Equals(contentType, "application/json", StringComparison.OrdinalIgnoreCase)) || (contentType?.EndsWith("+json", StringComparison.OrdinalIgnoreCase) ?? false)))
             {
                 return new ResponseDTO
                 {
