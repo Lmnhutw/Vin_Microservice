@@ -6,6 +6,7 @@
 # User secrets folder
 /secrets/
 .usersecrets
+.env
 
 
 # User-specific files

@@ -1,0 +1,11 @@
+.git
+.vs
+.agents
+.claude
+**/bin
+**/obj
+**/logs
+.env
+*.user
+*.suo
+

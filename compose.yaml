@@ -1,0 +1,151 @@
+name: vin
+
+x-api-common: &api-common
+  build:
+    context: .
+    dockerfile: Dockerfile
+  environment: &runtime-defaults
+    ASPNETCORE_ENVIRONMENT: Development
+    ASPNETCORE_URLS: http://+:8080
+  depends_on:
+    sqlserver:
+      condition: service_healthy
+  restart: unless-stopped
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: Y
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:-VinLocal_DevPassword123!}
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -Q \"SELECT 1\""]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 20s
+    restart: unless-stopped
+
+  auth-api:
+    <<: *api-common
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PROJECT_FILE: Vin.Services.AuthAPI/Vin.Services.AuthAPI.csproj
+        APP_DLL: Vin.Services.AuthAPI.dll
+    environment:
+      <<: *runtime-defaults
+      ConnectionStrings__DefaultConnection: Server=sqlserver,1433;Database=Vin_Auth;User Id=sa;Password=${MSSQL_SA_PASSWORD:-VinLocal_DevPassword123!};Encrypt=False;TrustServerCertificate=True
+      ApiSettings__JwtOptions__Secret: ${JWT_SECRET:-VinLocalDevelopmentJwtSecret_ChangeBeforeProduction_2026}
+      ApiSettings__JwtOptions__Issuer: vin-auth-api
+      ApiSettings__JwtOptions__Audience: vin-client
+    ports:
+      - "8082:8080"
+
+  product-api:
+    <<: *api-common
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PROJECT_FILE: Vin.Services.ProductAPI/Vin.Services.ProductAPI.csproj
+        APP_DLL: Vin.Services.ProductAPI.dll
+    environment:
+      <<: *runtime-defaults
+      ConnectionStrings__DefaultConnection: Server=sqlserver,1433;Database=Vin_Product;User Id=sa;Password=${MSSQL_SA_PASSWORD:-VinLocal_DevPassword123!};Encrypt=False;TrustServerCertificate=True
+      ApiSettings__Secret: ${JWT_SECRET:-VinLocalDevelopmentJwtSecret_ChangeBeforeProduction_2026}
+      ApiSettings__Issuer: vin-auth-api
+      ApiSettings__Audience: vin-client
+    ports:
+      - "8081:8080"
+
+  coupon-api:
+    <<: *api-common
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PROJECT_FILE: Vin.Services.CouponAPI/Vin.Services.CouponAPI.csproj
+        APP_DLL: Vin.Services.CouponAPI.dll
+    environment:
+      <<: *runtime-defaults
+      ConnectionStrings__DefaultConnection: Server=sqlserver,1433;Database=Vin_Coupon;User Id=sa;Password=${MSSQL_SA_PASSWORD:-VinLocal_DevPassword123!};Encrypt=False;TrustServerCertificate=True
+      ApiSettings__Secret: ${JWT_SECRET:-VinLocalDevelopmentJwtSecret_ChangeBeforeProduction_2026}
+      ApiSettings__Issuer: vin-auth-api
+      ApiSettings__Audience: vin-client
+    ports:
+      - "8083:8080"
+
+  shopping-cart-api:
+    <<: *api-common
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PROJECT_FILE: Vin.Services.ShoppingCartAPI/Vin.Services.ShoppingCartAPI.csproj
+        APP_DLL: Vin.Services.ShoppingCartAPI.dll
+    environment:
+      <<: *runtime-defaults
+      ConnectionStrings__DefaultConnection: Server=sqlserver,1433;Database=Vin_ShoppingCart;User Id=sa;Password=${MSSQL_SA_PASSWORD:-VinLocal_DevPassword123!};Encrypt=False;TrustServerCertificate=True
+      ApiSettings__Secret: ${JWT_SECRET:-VinLocalDevelopmentJwtSecret_ChangeBeforeProduction_2026}
+      ApiSettings__Issuer: vin-auth-api
+      ApiSettings__Audience: vin-client
+      ServiceUrls__ProductAPI: http://product-api:8080
+      ServiceUrls__CouponAPI: http://coupon-api:8080
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      product-api:
+        condition: service_started
+      coupon-api:
+        condition: service_started
+    ports:
+      - "8084:8080"
+
+  email-api:
+    <<: *api-common
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PROJECT_FILE: Vin.Services.EmailAPI/Vin.Services.EmailAPI.csproj
+        APP_DLL: Vin.Services.EmailAPI.dll
+    environment:
+      <<: *runtime-defaults
+      ConnectionStrings__DefaultConnection: Server=sqlserver,1433;Database=Vin_Email;User Id=sa;Password=${MSSQL_SA_PASSWORD:-VinLocal_DevPassword123!};Encrypt=False;TrustServerCertificate=True
+    ports:
+      - "8085:8080"
+
+  web:
+    <<: *api-common
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PROJECT_FILE: VinWeb/Vin.Web.csproj
+        APP_DLL: Vin.Web.dll
+    environment:
+      <<: *runtime-defaults
+      ServiceUrls__AuthAPI: http://auth-api:8080
+      ServiceUrls__ProductAPI: http://product-api:8080
+      ServiceUrls__CouponAPI: http://coupon-api:8080
+      ServiceUrls__ShoppingCartAPI: http://shopping-cart-api:8080
+    depends_on:
+      auth-api:
+        condition: service_started
+      product-api:
+        condition: service_started
+      coupon-api:
+        condition: service_started
+      shopping-cart-api:
+        condition: service_started
+    ports:
+      - "8080:8080"
+
+volumes:
+  sqlserver-data:

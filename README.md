@@ -60,6 +60,32 @@ When the Azure Service Bus setting is absent, the APIs can start in local/degrad
 
 ## Run and verify
 
+### Docker Compose (recommended for local development)
+
+With Docker Desktop running, start the complete stack from the repository root:
+
+```powershell
+docker compose up --build
+```
+
+The MVC web client is available at `http://localhost:8080`. The APIs are also
+published for Swagger/debugging: Product `8081`, Auth `8082`, Coupon `8083`,
+Shopping Cart `8084`, and Email `8085` (for example,
+`http://localhost:8081/swagger`). SQL Server is published at `localhost:1433`
+and its data is persisted in the `sqlserver-data` Docker volume.
+
+The Compose file provides development-only defaults for the SQL password and
+JWT secret so the command works on a fresh machine. To override them, copy
+`.env.example` to `.env` and set strong values there; `.env` is ignored by Git.
+The email consumer remains disabled unless `ServiceBus__ConnectionString` is
+provided, matching the normal local/degraded behavior.
+
+Stop the stack with `docker compose down`. Use
+`docker compose down --volumes` only when you intentionally want to delete all
+local SQL Server data.
+
+### Run without Docker
+
 ```powershell
 dotnet restore Vin.sln
 dotnet build Vin.sln
