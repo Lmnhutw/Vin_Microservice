@@ -1,6 +1,6 @@
 # Vin E-commerce Microservices
 
-Vin is a .NET 8 e-commerce solution with separate APIs for authentication, products, coupons, shopping carts, and email notifications, plus an ASP.NET MVC web client.
+Vin is a .NET 8 e-commerce solution with separate APIs for authentication, products, coupons, shopping carts, and email notifications, plus an Angular client hosted by ASP.NET Core.
 
 ## Current architecture
 
@@ -10,16 +10,16 @@ Vin is a .NET 8 e-commerce solution with separate APIs for authentication, produ
 - `Vin.Services.ShoppingCartAPI`: cart operations, synchronous calls to Product/Coupon APIs, and optional Azure Service Bus publishing.
 - `Vin.Services.EmailAPI`: consumes cart messages when Service Bus is configured and persists email notification logs to SQL Server.
 - `Vin.MessageBus`: shared Azure Service Bus publisher infrastructure.
-- `VinWeb`: server-rendered ASP.NET MVC client that calls the APIs through typed/named HTTP clients.
+- `VinWeb`: ASP.NET Core host and same-origin BFF that serves Angular and calls the internal APIs through typed services.
 
 Each API owns its EF Core `DbContext` and database migrations. The current solution does not yet contain an Order API, gateway, payment integration, RabbitMQ integration, or Azure deployment configuration.
 ## FE flow and API contract
 
-VinWeb is an ASP.NET Core MVC/Razor client, not a separate SPA. Its main flow is:
+The browser uses the same-origin Angular client and BFF. Internal service URLs and JWTs stay server-side:
 
 ~~~text
-Razor View
-  -> VinWeb Controller
+Angular component
+  -> VinWeb BFF
   -> VinWeb Service
   -> BaseService.SendAsync
   -> API ResponseDTO
@@ -35,6 +35,8 @@ The implemented user flows are:
 The Cart API now enforces the authenticated JWT subject as the cart owner. It does not trust a caller-provided UserId or a route user ID, returns 403 for cross-user access, and validates missing cart headers/items before persistence. VinWeb/Service/BaseService.cs also accepts JSON-compatible response media types and evaluates HTTP error status before applying the successful-response content-type guard.
 
 The FE and BE should be treated as one contract boundary: keep route names, HTTP methods, DTO property names, ResponseDTO, and 400/401/403/404/500 behavior synchronized when changing either side.
+
+The Angular source is in `VinWeb/ClientApp`. Run `npm install` and `npm run build` from that directory for a production bundle. Docker builds the client automatically and copies it into the web host. Set `Frontend:UseAngular` to `false` only for a temporary Razor fallback.
 
 ## Local configuration
 

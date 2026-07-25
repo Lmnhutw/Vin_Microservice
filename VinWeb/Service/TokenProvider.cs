@@ -24,9 +24,19 @@ namespace Vin.Web.Service
             return hasToken is true ? token : null;
         }
 
-        public void SetToken(string token)
-        {
-            _ctxAccessor.HttpContext?.Response.Cookies.Append(StaticDetail.TokenCookie, token);
-        }
+    public void SetToken(string token)
+    {
+        _ctxAccessor.HttpContext?.Response.Cookies.Append(
+            StaticDetail.TokenCookie,
+            token,
+            new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = _ctxAccessor.HttpContext?.Request.IsHttps == true,
+                SameSite = SameSiteMode.Lax,
+                IsEssential = true,
+                MaxAge = TimeSpan.FromHours(1)
+            });
     }
+}
 }

@@ -29,6 +29,7 @@ builder.Services.AddControllersWithViews()
         PositionClass = ToastPositions.BottomCenter,
         TimeOut = 5000
     });
+builder.Services.AddHealthChecks();
 
 builder.Services.AddScoped<ITokenProvider, TokenProvider>();
 builder.Services.AddScoped<IBaseService, BaseService>();
@@ -42,6 +43,10 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     .AddCookie(option =>
     {
         option.ExpireTimeSpan = TimeSpan.FromDays(14);
+        option.SlidingExpiration = true;
+        option.Cookie.HttpOnly = true;
+        option.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+        option.Cookie.SameSite = SameSiteMode.Lax;
         option.LoginPath = "/Auth/login";
         option.AccessDeniedPath = "/Auth/AccessDenied";
     });
@@ -66,8 +71,19 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+app.MapControllers();
+
+if (builder.Configuration.GetValue("Frontend:UseAngular", true))
+{
+    app.MapFallbackToFile("index.html");
+}
+else
+{
+    app.MapControllerRoute(
+        name: "default",
+        pattern: "{controller=Home}/{action=Index}/{id?}");
+}
+
+app.MapHealthChecks("/health");
 
 app.Run();

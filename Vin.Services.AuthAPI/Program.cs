@@ -33,6 +33,7 @@ builder.Services.AddOptions<JwtOptions>()
     .ValidateOnStart();
 
 builder.Services.AddControllers();
+builder.Services.AddHealthChecks();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -52,6 +53,7 @@ app.UseAuthentication();// MUST be put before authorize
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHealthChecks("/health");
 
 ApplyMigration(); //applied migration method
 

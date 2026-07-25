@@ -22,6 +22,7 @@ IMapper mapper = MappingConfig.InstanceMaps().CreateMapper();
 builder.Services.AddSingleton(mapper);
 
 builder.Services.AddControllers();
+builder.Services.AddHealthChecks();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(option =>
@@ -97,6 +98,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHealthChecks("/health");
 
 ApplyMigration();
 

@@ -33,28 +33,49 @@ namespace Vin.Services.AuthAPI.Services
 
         public async Task<bool> AssignRole(string email, string rolename)
         {
-            var user = _db.ApplicationUsers.FirstOrDefault(u => u.Email.ToLower() == email.ToLower());
-            if (user != null)
+            if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(rolename))
             {
-                if (!_roleManager.RoleExistsAsync(rolename).GetAwaiter().GetResult())
-                {
-                    _roleManager.CreateAsync(new IdentityRole(rolename)).GetAwaiter().GetResult();
-                }
-                await _userManager.AddToRoleAsync(user, rolename);
-                return true;
+                return false;
             }
-            return false;
+
+            var user = await _userManager.FindByEmailAsync(email.Trim());
+            if (user is null)
+            {
+                return false;
+            }
+
+            var normalizedRole = rolename.Trim().ToUpperInvariant();
+            if (!await _roleManager.RoleExistsAsync(normalizedRole))
+            {
+                var roleResult = await _roleManager.CreateAsync(new IdentityRole(normalizedRole));
+                if (!roleResult.Succeeded)
+                {
+                    return false;
+                }
+            }
+
+            var result = await _userManager.AddToRoleAsync(user, normalizedRole);
+            return result.Succeeded;
         }
 
         public async Task<LoginResponseDTO> Login(LoginRequestDTO loginRequestDTO)
         {
-            var user = _db.ApplicationUsers.FirstOrDefault(u => u.UserName.ToLower() == loginRequestDTO.UserName);
-            bool isValid = await _userManager.CheckPasswordAsync(user, loginRequestDTO.Password);
-            if (user == null || isValid == false)
+            if (loginRequestDTO is null || string.IsNullOrWhiteSpace(loginRequestDTO.UserName) ||
+                string.IsNullOrWhiteSpace(loginRequestDTO.Password))
             {
                 return new LoginResponseDTO
                 {
-                    User = null,
+                    User = null!,
+                    Token = ""
+                };
+            }
+
+            var user = await _userManager.FindByNameAsync(loginRequestDTO.UserName.Trim());
+            if (user is null || !await _userManager.CheckPasswordAsync(user, loginRequestDTO.Password))
+            {
+                return new LoginResponseDTO
+                {
+                    User = null!,
                     Token = ""
                 };
             }
@@ -84,36 +105,40 @@ namespace Vin.Services.AuthAPI.Services
 
         public async Task<UserDTO> Register(RegistrationRequestDTO registrationRequestDTO)
         {
+            if (registrationRequestDTO is null)
+            {
+                return new UserDTO();
+            }
+
             ApplicationUser user = new()
             {
-                UserName = registrationRequestDTO.Email,
-                Email = registrationRequestDTO.Email,
-                NormalizedEmail = registrationRequestDTO.Email.ToUpper(),
-                FullName = registrationRequestDTO.FullName,
+                UserName = registrationRequestDTO.Email.Trim(),
+                Email = registrationRequestDTO.Email.Trim(),
+                NormalizedEmail = registrationRequestDTO.Email.Trim().ToUpperInvariant(),
+                FullName = registrationRequestDTO.FullName?.Trim() ?? string.Empty,
                 PhoneNumber = registrationRequestDTO.PhoneNumber
             };
-            try
-            {
-                var result = await _userManager.CreateAsync(user, registrationRequestDTO.Password);
-                if (result.Succeeded)
-                {
-                    var userReturn = _db.ApplicationUsers.First(u => u.UserName == registrationRequestDTO.Email);
 
-                    UserDTO userDTO = new()
-                    {
-                        Email = userReturn.Email,
-                        ID = userReturn.Id,
-                        FullName = userReturn.FullName,
-                        PhoneNumber = userReturn.PhoneNumber
-                    };
-                    return userDTO;
-                }
-            }
-            catch (Exception ex)
+            var result = await _userManager.CreateAsync(user, registrationRequestDTO.Password);
+            if (!result.Succeeded)
             {
-                throw ex;
+                return new UserDTO();
             }
-            return new UserDTO();
+
+            const string customerRole = "CUSTOMER";
+            if (!await _roleManager.RoleExistsAsync(customerRole))
+            {
+                await _roleManager.CreateAsync(new IdentityRole(customerRole));
+            }
+
+            await _userManager.AddToRoleAsync(user, customerRole);
+            return new UserDTO
+            {
+                Email = user.Email,
+                ID = user.Id,
+                FullName = user.FullName,
+                PhoneNumber = user.PhoneNumber
+            };
         }
 
         public async Task<bool> ForgotPassword(ForgotPasswordDTO forgotPasswordDTO)

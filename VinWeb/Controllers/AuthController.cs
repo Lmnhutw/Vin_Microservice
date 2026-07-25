@@ -60,12 +60,6 @@ namespace Vin.Web.Controllers
         [HttpGet]
         public IActionResult Register()
         {
-            var roleList = new List<SelectListItem>
-            {
-        new() { Text = StaticDetail.RoleAdmin, Value = StaticDetail.RoleAdmin },
-        new() { Text = StaticDetail.RoleCustomer, Value = StaticDetail.RoleCustomer },
-            };
-            ViewBag.RoleList = roleList;
             return View();
 
         }
@@ -73,13 +67,6 @@ namespace Vin.Web.Controllers
         [HttpGet]
         public IActionResult RegisterRoleView()
         {
-            var roleList = new List<SelectListItem>()
-            {
-                new SelectListItem{Text=StaticDetail.RoleAdmin, Value=StaticDetail.RoleAdmin},
-                new SelectListItem{Text=StaticDetail.RoleCustomer, Value=StaticDetail.RoleCustomer},
-
-            };
-            ViewBag.RoleList = roleList;
             return View();
         }
 
@@ -100,16 +87,8 @@ namespace Vin.Web.Controllers
 
             if (result != null && result.IsSuccess)
             {
-                if (string.IsNullOrEmpty(registration.Role))
-                {
-                    registration.Role = StaticDetail.RoleCustomer;
-                }
-                var assigningRole = await _authService.AssignRoleAsync(registration);
-                if (assigningRole != null && assigningRole.IsSuccess)
-                {
-                    _toastNotification.AddSuccessToastMessage("Register Successfully!!!");
-                    return RedirectToAction(nameof(Login));
-                }
+                _toastNotification.AddSuccessToastMessage("Register Successfully!!!");
+                return RedirectToAction(nameof(Login));
             }
             else if (result != null)
             {
@@ -152,19 +131,20 @@ namespace Vin.Web.Controllers
 
             var identity = new ClaimsIdentity(CookieAuthenticationDefaults.AuthenticationScheme);
 
-            identity.AddClaim(new Claim(JwtRegisteredClaimNames.Email,
-                jwt.Claims.FirstOrDefault(u => u.Type == JwtRegisteredClaimNames.Email).Value));
+            foreach (var claim in jwt.Claims)
+            {
+                if (claim.Type is JwtRegisteredClaimNames.Email or JwtRegisteredClaimNames.Sub or
+                    JwtRegisteredClaimNames.Name or ClaimTypes.Role or "role")
+                {
+                    identity.AddClaim(claim);
+                }
+            }
 
-            identity.AddClaim(new Claim(JwtRegisteredClaimNames.Sub,
-                jwt.Claims.FirstOrDefault(u => u.Type == JwtRegisteredClaimNames.Sub).Value));
-
-            identity.AddClaim(new Claim(JwtRegisteredClaimNames.Name,
-                jwt.Claims.FirstOrDefault(u => u.Type == JwtRegisteredClaimNames.Name).Value));
-
-            identity.AddClaim(new Claim(ClaimTypes.Name,
-                jwt.Claims.FirstOrDefault(u => u.Type == JwtRegisteredClaimNames.Email).Value));
-            identity.AddClaim(new Claim(ClaimTypes.Role,
-                jwt.Claims.FirstOrDefault(u => u.Type == "role").Value));
+            var email = jwt.Claims.FirstOrDefault(u => u.Type == JwtRegisteredClaimNames.Email)?.Value;
+            if (!string.IsNullOrWhiteSpace(email))
+            {
+                identity.AddClaim(new Claim(ClaimTypes.Name, email));
+            }
 
             var principal = new ClaimsPrincipal(identity);
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);

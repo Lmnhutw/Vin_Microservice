@@ -57,8 +57,10 @@ public class CartAPIController : ControllerBase
             {
                 CartHeader = _mapper.Map<CartHeaderDTO>(cartHeader),
             };
-            cart.CartDetails = _mapper.Map<IEnumerable<CartDetailsDTO>>(_db.CartDetails
-                .Where(u => u.CartHeaderId == cart.CartHeader.CartHeaderId));
+            cart.CartDetails = _mapper.Map<IEnumerable<CartDetailsDTO>>(await _db.CartDetails
+                .AsNoTracking()
+                .Where(u => u.CartHeaderId == cart.CartHeader.CartHeaderId)
+                .ToListAsync());
 
             IEnumerable<ProductDTO> productDTOs = await _productService.GetProducts();
 
@@ -91,7 +93,11 @@ public class CartAPIController : ControllerBase
                     }
 
                 }
-                _res.Message = "The Coupon you just type in is not available, please try another one.";
+                if (coupon is null)
+                {
+                    _res.IsSuccess = false;
+                    _res.Message = "The coupon is not available.";
+                }
             }
 
 
@@ -114,6 +120,11 @@ public class CartAPIController : ControllerBase
             if (cartDto?.CartHeader is null)
             {
                 return BadRequest(new ResponseDTO { IsSuccess = false, Message = "Cart header is required." });
+            }
+
+            if (string.IsNullOrWhiteSpace(cartDto.CartHeader.CouponCode))
+            {
+                return BadRequest(new ResponseDTO { IsSuccess = false, Message = "Coupon code is required." });
             }
 
             var currentUserId = GetCurrentUserId();
@@ -142,6 +153,15 @@ public class CartAPIController : ControllerBase
     {
         try
         {
+            if (cartDto?.CartHeader is null)
+            {
+                return BadRequest(new ResponseDTO { IsSuccess = false, Message = "Cart header is required." });
+            }
+
+            cartDto.CartHeader.UserId = GetCurrentUserId();
+            cartDto.CartHeader.Email = User.FindFirstValue(JwtRegisteredClaimNames.Email)
+                ?? User.FindFirstValue(ClaimTypes.Email)
+                ?? string.Empty;
             await _messageBus.PublishMessageAsync(cartDto, _emailShoppingCartQueue);
             _res.Result = true;
         }
@@ -190,6 +210,12 @@ public class CartAPIController : ControllerBase
                 return BadRequest(new ResponseDTO { IsSuccess = false, Message = "Cart header and at least one cart item are required." });
             }
 
+            var item = cartDTO.CartDetails.First();
+            if (item.ProductId <= 0 || item.Count <= 0)
+            {
+                return BadRequest(new ResponseDTO { IsSuccess = false, Message = "A valid product and quantity are required." });
+            }
+
             cartDTO.CartHeader.UserId = GetCurrentUserId();
 
             var cartHeaderFromDb = await _db.CartHeaders
@@ -201,8 +227,8 @@ public class CartAPIController : ControllerBase
                 CartHeader cartHeader = _mapper.Map<CartHeader>(cartDTO.CartHeader);
                 _db.CartHeaders.Add(cartHeader);
                 await _db.SaveChangesAsync();
-                cartDTO.CartDetails.First().CartHeaderId = cartHeader.CartHeaderId;
-                _db.CartDetails.Add(_mapper.Map<CartDetails>(cartDTO.CartDetails.First()));
+                item.CartHeaderId = cartHeader.CartHeaderId;
+                _db.CartDetails.Add(_mapper.Map<CartDetails>(item));
                 await _db.SaveChangesAsync();
             }
             else
@@ -211,22 +237,22 @@ public class CartAPIController : ControllerBase
                 var cartDetailsFromDb = await _db.CartDetails
                     .AsNoTracking()
                     .FirstOrDefaultAsync(u =>
-                        u.ProductId == cartDTO.CartDetails.First().ProductId &&
+                        u.ProductId == item.ProductId &&
                         u.CartHeaderId == cartHeaderFromDb.CartHeaderId);
                 if (cartDetailsFromDb == null)
                 {
                     // Create new CartDetails
-                    cartDTO.CartDetails.First().CartHeaderId = cartHeaderFromDb.CartHeaderId;
-                    _db.CartDetails.Add(_mapper.Map<CartDetails>(cartDTO.CartDetails.First()));
+                    item.CartHeaderId = cartHeaderFromDb.CartHeaderId;
+                    _db.CartDetails.Add(_mapper.Map<CartDetails>(item));
                     await _db.SaveChangesAsync();
                 }
                 else
                 {
                     // Update count in CartDetails
-                    cartDTO.CartDetails.First().Count += cartDetailsFromDb.Count;
-                    cartDTO.CartDetails.First().CartHeaderId = cartDetailsFromDb.CartHeaderId;
-                    cartDTO.CartDetails.First().CartDetailsId = cartDetailsFromDb.CartDetailsId;
-                    _db.CartDetails.Update(_mapper.Map<CartDetails>(cartDTO.CartDetails.First()));
+                    item.Count += cartDetailsFromDb.Count;
+                    item.CartHeaderId = cartDetailsFromDb.CartHeaderId;
+                    item.CartDetailsId = cartDetailsFromDb.CartDetailsId;
+                    _db.CartDetails.Update(_mapper.Map<CartDetails>(item));
                     await _db.SaveChangesAsync();
                 }
             }

@@ -1,0 +1,40 @@
+export interface ResponseDto<T> {
+  isSuccess: boolean;
+  result: T | null;
+  message: string;
+  errorMessages: string[];
+}
+
+export interface User {
+  id: string;
+  email: string;
+  fullName: string;
+  phoneNumber?: string;
+}
+
+export interface Product {
+  productId: number;
+  name: string;
+  price: number;
+  description: string;
+  categoryName: string;
+  imageUrl?: string;
+}
+
+export interface CartItem {
+  cartDetailsId: number;
+  productId: number;
+  count: number;
+  product?: Product;
+}
+
+export interface Cart {
+  cartHeader: {
+    cartHeaderId: number;
+    userId?: string;
+    couponCode?: string;
+    discount: number;
+    cartTotal: number;
+  };
+  cartDetails: CartItem[];
+}
