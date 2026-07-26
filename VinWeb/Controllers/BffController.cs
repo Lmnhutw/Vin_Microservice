@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using Vin.Web.Models;
 using Vin.Web.Models.AuthModels;
 using Vin.Web.Models.CartModels;
 using Vin.Web.Service.IService;
@@ -17,17 +18,20 @@ public sealed class BffController : ControllerBase
 {
     private readonly IAuthService _authService;
     private readonly IProductService _productService;
+    private readonly ICouponService _couponService;
     private readonly IShoppingCartService _cartService;
     private readonly ITokenProvider _tokenProvider;
 
     public BffController(
         IAuthService authService,
         IProductService productService,
+        ICouponService couponService,
         IShoppingCartService cartService,
         ITokenProvider tokenProvider)
     {
         _authService = authService;
         _productService = productService;
+        _couponService = couponService;
         _cartService = cartService;
         _tokenProvider = tokenProvider;
     }
@@ -98,6 +102,62 @@ public sealed class BffController : ControllerBase
     [AllowAnonymous]
     public async Task<IActionResult> Product(int id) => Ok(await _productService.GetProductByIdAsync(id));
 
+    [HttpPost("admin/products")]
+    [Authorize(Roles = "ADMIN")]
+    public async Task<IActionResult> CreateProduct([FromBody] ProductDTO product)
+        => Ok(await _productService.CreateProductsAsync(product));
+
+    [HttpPut("admin/products/{id:int}")]
+    [Authorize(Roles = "ADMIN")]
+    public async Task<IActionResult> UpdateProduct(int id, [FromBody] ProductDTO product)
+    {
+        if (id != product.ProductId)
+        {
+            return BadRequest(new ResponseDTO
+            {
+                IsSuccess = false,
+                Message = "The route product id does not match the request."
+            });
+        }
+
+        return Ok(await _productService.UpdateProductsAsync(product));
+    }
+
+    [HttpDelete("admin/products/{id:int}")]
+    [Authorize(Roles = "ADMIN")]
+    public async Task<IActionResult> DeleteProduct(int id)
+        => Ok(await _productService.DeleteProductAsync(id));
+
+    [HttpGet("admin/coupons")]
+    [Authorize(Roles = "ADMIN")]
+    public async Task<IActionResult> Coupons() => Ok(await _couponService.GetAllCouponAsync());
+
+    [HttpPost("admin/coupons")]
+    [Authorize(Roles = "ADMIN")]
+    public async Task<IActionResult> CreateCoupon([FromBody] CouponDTO coupon)
+        => Ok(await _couponService.CreateCouponsAsync(coupon));
+
+    [HttpPut("admin/coupons/{id:int}")]
+    [Authorize(Roles = "ADMIN")]
+    public async Task<IActionResult> UpdateCoupon(int id, [FromBody] CouponDTO coupon)
+    {
+        if (id != coupon.CouponId)
+        {
+            return BadRequest(new ResponseDTO
+            {
+                IsSuccess = false,
+                Message = "The route coupon id does not match the request."
+            });
+        }
+
+        return Ok(await _couponService.UpdateCouponsAsync(coupon));
+    }
+
+    [HttpDelete("admin/coupons/{id:int}")]
+    [Authorize(Roles = "ADMIN")]
+    public async Task<IActionResult> DeleteCoupon(int id)
+        => Ok(await _couponService.DeleteCouponAsync(id));
+
     [HttpGet("cart")]
     [Authorize]
     public async Task<IActionResult> Cart() => Ok(await _cartService.GetCartByUserIdAsync(CurrentUserId()));
@@ -140,9 +200,14 @@ public sealed class BffController : ControllerBase
         foreach (var claim in jwt.Claims)
         {
             if (claim.Type is JwtRegisteredClaimNames.Email or JwtRegisteredClaimNames.Sub or
-                JwtRegisteredClaimNames.Name or ClaimTypes.Role or "role")
+                JwtRegisteredClaimNames.Name)
             {
                 identity.AddClaim(claim);
+            }
+
+            if (claim.Type is ClaimTypes.Role or "role")
+            {
+                identity.AddClaim(new Claim(ClaimTypes.Role, claim.Value));
             }
         }
 

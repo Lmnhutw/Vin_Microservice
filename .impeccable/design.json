@@ -1,0 +1,153 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-26T15:30:00Z",
+  "title": "Design System: Vin Shop",
+  "extensions": {
+    "colorMeta": {
+      "ink": {
+        "role": "neutral",
+        "displayName": "Mineral Ink",
+        "canonical": "#17202a",
+        "tonalRamp": ["#080d12", "#17202a", "#263342", "#475463", "#687582", "#98a2aa", "#cbd0d4", "#f0f2f3"]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Dispatch Paper",
+        "canonical": "#f7f7f2",
+        "tonalRamp": ["#24251f", "#45473d", "#67695d", "#8b8d80", "#afb1a5", "#d1d2c9", "#e9e9e3", "#f7f7f2"]
+      },
+      "routing-accent": {
+        "role": "primary",
+        "displayName": "Routing Acid",
+        "canonical": "#d9ff43",
+        "tonalRamp": ["#202a00", "#405400", "#647e00", "#88a900", "#add624", "#d9ff43", "#e8ff8a", "#f5ffd1"]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Transit Grey",
+        "canonical": "#68717b",
+        "tonalRamp": ["#11161b", "#252c33", "#3b444d", "#535d67", "#68717b", "#9299a0", "#bdc1c5", "#eceeef"]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Dispatch Display",
+        "purpose": "One poster-scale message per viewport."
+      },
+      "body": {
+        "displayName": "Workhorse Body",
+        "purpose": "Customer copy, descriptions, forms, and operational guidance."
+      },
+      "label": {
+        "displayName": "Route Label",
+        "purpose": "Compact identifiers, service ownership, and state metadata."
+      }
+    },
+    "shadows": [
+      {
+        "name": "summary-lift",
+        "value": "0 18px 45px rgba(23, 32, 42, 0.12)",
+        "purpose": "Separates a sticky summary or focused form from the working surface."
+      },
+      {
+        "name": "toast-lift",
+        "value": "0 18px 45px rgba(23, 32, 42, 0.26)",
+        "purpose": "Keeps transient feedback above the current task."
+      }
+    ],
+    "motion": [
+      {
+        "name": "route-out",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Hero reveals, toast arrival, and directional layout movement."
+      },
+      {
+        "name": "state-fast",
+        "value": "160ms ease-out",
+        "purpose": "Buttons, filters, and compact interaction feedback."
+      }
+    ],
+    "breakpoints": [
+      { "name": "mobile", "value": "480px" },
+      { "name": "navigation", "value": "760px" },
+      { "name": "workspace", "value": "1040px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The decisive action on light operational surfaces.",
+      "html": "<button class=\"ds-button-primary\">Email this cart</button>",
+      "css": ".ds-button-primary { min-height: 48px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid transparent; border-radius: 8px; padding: 12px 18px; background: var(--ink, #17202a); color: var(--white, #ffffff); font: 850 14px 'Segoe UI', Arial, sans-serif; transition: background-color 160ms ease-out, transform 160ms ease-out; } .ds-button-primary:hover { background: var(--ink-soft, #263342); transform: translateY(-2px); } .ds-button-primary:focus-visible { outline: 3px solid var(--accent, #d9ff43); outline-offset: 4px; }"
+    },
+    {
+      "name": "Routing Button",
+      "kind": "button",
+      "refersTo": "button-accent",
+      "description": "The single high-energy action on an ink-dark surface.",
+      "html": "<button class=\"ds-button-accent\">View the dispatch</button>",
+      "css": ".ds-button-accent { min-height: 48px; display: inline-flex; align-items: center; justify-content: center; border: 0; border-radius: 8px; padding: 12px 18px; background: var(--accent, #d9ff43); color: var(--ink, #17202a); font: 850 14px 'Segoe UI', Arial, sans-serif; transition: background-color 160ms ease-out, transform 160ms ease-out; } .ds-button-accent:hover { background: var(--accent-deep, #b9e22d); transform: translateY(-2px); } .ds-button-accent:focus-visible { outline: 3px solid #ffffff; outline-offset: 4px; }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "A stable 48px form field with visible focus and no layout shift.",
+      "html": "<label class=\"ds-field\"><span>Email</span><input type=\"email\" placeholder=\"name@example.com\"></label>",
+      "css": ".ds-field { display: grid; gap: 7px; color: var(--ink, #17202a); font: 800 13px 'Segoe UI', Arial, sans-serif; } .ds-field input { min-height: 48px; border: 1px solid #aeb5b4; border-radius: 8px; background: var(--white, #ffffff); color: var(--ink, #17202a); padding: 12px 13px; font: 400 16px 'Segoe UI', Arial, sans-serif; } .ds-field input:focus-visible { border-color: var(--ink, #17202a); outline: 3px solid rgba(217, 255, 67, .8); outline-offset: 1px; }"
+    },
+    {
+      "name": "Route Label",
+      "kind": "chip",
+      "description": "Identifies an item, service boundary, or current route without becoming decorative.",
+      "html": "<span class=\"ds-route-label\">LIVE / PRODUCT SERVICE</span>",
+      "css": ".ds-route-label { display: inline-block; color: #4c5864; font: 900 11px/1.4 'Segoe UI', Arial, sans-serif; letter-spacing: .14em; text-transform: uppercase; }"
+    },
+    {
+      "name": "Quantity Stepper",
+      "kind": "custom",
+      "description": "A compact cart control with explicit decrement, value, and increment targets.",
+      "html": "<div class=\"ds-stepper\"><button aria-label=\"Decrease quantity\">−</button><output>2</output><button aria-label=\"Increase quantity\">+</button></div>",
+      "css": ".ds-stepper { min-height: 46px; display: inline-grid; grid-template-columns: 42px 38px 42px; align-items: center; border: 1px solid var(--line, #cfd3cf); border-radius: 8px; background: var(--white, #ffffff); color: var(--ink, #17202a); } .ds-stepper button { height: 44px; border: 0; background: transparent; color: inherit; font-size: 18px; } .ds-stepper button:hover { background: #e8eae5; } .ds-stepper button:focus-visible { outline: 3px solid var(--accent, #d9ff43); outline-offset: 1px; } .ds-stepper output { text-align: center; font-weight: 800; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Dispatch Catalogue",
+    "overview": "Vin Shop borrows the clarity of a well-run dispatch desk and the confidence of a contemporary product catalogue. Large product photography and decisive type create desire; routing marks, compact identifiers, and crisp status language quietly suggest that every action has a destination. The system is energetic without becoming playful.",
+    "keyCharacteristics": [
+      "Full-width visual anchors with restrained copy.",
+      "Ink-dark structural surfaces against clean paper-like content fields.",
+      "One electric routing accent used for action and state.",
+      "Square, directional composition softened only where touch ergonomics require it.",
+      "Motion communicates arrival, routing, and state change."
+    ],
+    "rules": [
+      {
+        "name": "The Routing Mark Rule",
+        "body": "The accent marks a destination, selection, or successful state; it is never scattered as decoration.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Poster Rule",
+        "body": "Only one message per viewport earns display scale; all supporting language remains compact.",
+        "section": "typography"
+      }
+    ],
+    "dos": [
+      "Use real product imagery and make its crop intentional.",
+      "Make loading, empty, error, disabled, and success states visible.",
+      "Let alignment and scale create hierarchy before adding containers.",
+      "Preserve familiar commerce affordances even when the composition is distinctive.",
+      "Honor reduced-motion preferences."
+    ],
+    "donts": [
+      "Build the page from a mosaic of equal rounded cards.",
+      "Use gradients, glass, glow, or decorative grids as a substitute for product content.",
+      "Put marketing language inside admin or operational surfaces.",
+      "Repeat uppercase eyebrow labels over every section.",
+      "Invent stock, shipping, customer, pricing, or performance claims."
+    ]
+  }
+}

@@ -8,8 +8,10 @@ export interface ResponseDto<T> {
 export interface User {
   id: string;
   email: string;
-  fullName: string;
+  fullName?: string;
+  name?: string;
   phoneNumber?: string;
+  roles?: string[];
 }
 
 export interface Product {
@@ -19,6 +21,14 @@ export interface Product {
   description: string;
   categoryName: string;
   imageUrl?: string;
+  imageLocalPath?: string;
+}
+
+export interface Coupon {
+  couponId: number;
+  couponCode: string;
+  discountAmount: number;
+  minAmount: number;
 }
 
 export interface CartItem {

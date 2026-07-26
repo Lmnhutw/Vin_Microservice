@@ -13,6 +13,9 @@ import { ApiService } from '../../core/api.service';
       <form [formGroup]="forgotForm" (ngSubmit)="sendReset()" novalidate>
         <label for="forgot-email">Email</label>
         <input id="forgot-email" type="email" formControlName="email" autocomplete="email" />
+        @if (forgotForm.controls.email.touched && forgotForm.controls.email.invalid) {
+          <small class="error">Enter a valid email address.</small>
+        }
         <button class="primary-button" type="submit" [disabled]="forgotForm.invalid || loading">Send reset instructions</button>
       </form>
       <hr />
@@ -20,10 +23,19 @@ import { ApiService } from '../../core/api.service';
       <form [formGroup]="resetForm" (ngSubmit)="reset()" novalidate>
         <label for="reset-email">Email</label>
         <input id="reset-email" type="email" formControlName="email" autocomplete="email" />
+        @if (resetForm.controls.email.touched && resetForm.controls.email.invalid) {
+          <small class="error">Enter a valid email address.</small>
+        }
         <label for="token">Reset token</label>
         <input id="token" formControlName="token" autocomplete="one-time-code" />
+        @if (resetForm.controls.token.touched && resetForm.controls.token.invalid) {
+          <small class="error">Enter the reset token from your message.</small>
+        }
         <label for="new-password">New password</label>
         <input id="new-password" type="password" formControlName="newPassword" autocomplete="new-password" />
+        @if (resetForm.controls.newPassword.touched && resetForm.controls.newPassword.invalid) {
+          <small class="error">Use at least 8 characters.</small>
+        }
         @if (message) { <p class="muted" role="status">{{ message }}</p> }
         @if (error) { <p class="error" role="alert">{{ error }}</p> }
         <button class="primary-button" type="submit" [disabled]="resetForm.invalid || loading">Reset password</button>
@@ -45,8 +57,13 @@ export class ResetPasswordComponent {
   protected error = '';
 
   sendReset(): void {
-    if (this.forgotForm.invalid) return;
+    if (this.forgotForm.invalid) {
+      this.forgotForm.markAllAsTouched();
+      return;
+    }
     this.loading = true;
+    this.error = '';
+    this.message = '';
     this.api.forgotPassword(this.forgotForm.controls.email.value).subscribe({
       next: response => { this.loading = false; this.message = response.message || 'If the account exists, reset instructions will be sent.'; },
       error: () => { this.loading = false; this.error = 'Unable to send reset instructions.'; }
@@ -54,8 +71,13 @@ export class ResetPasswordComponent {
   }
 
   reset(): void {
-    if (this.resetForm.invalid) return;
+    if (this.resetForm.invalid) {
+      this.resetForm.markAllAsTouched();
+      return;
+    }
     this.loading = true;
+    this.error = '';
+    this.message = '';
     const value = this.resetForm.getRawValue();
     this.api.resetPassword(value.email, value.token, value.newPassword).subscribe({
       next: response => { this.loading = false; this.message = response.message || 'Password reset successfully.'; },
