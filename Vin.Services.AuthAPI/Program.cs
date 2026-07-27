@@ -1,5 +1,10 @@
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Vin.BuildingBlocks.Diagnostics;
+using Vin.BuildingBlocks.Health;
 using Vin.Services.AuthAPI.Data;
 using Vin.Services.AuthAPI.Models;
 using Vin.Services.AuthAPI.Services;
@@ -20,6 +25,30 @@ builder.Services.AddDbContext<AppDbContext>(option =>
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<AppDbContext>().AddDefaultTokenProviders(); //register Identity,  ApplicationUser
 
+var jwtSection = builder.Configuration.GetSection("ApiSettings:JwtOptions");
+var jwtSecret = jwtSection["Secret"]
+    ?? throw new InvalidOperationException("ApiSettings:JwtOptions:Secret is not configured.");
+var jwtIssuer = jwtSection["Issuer"]
+    ?? throw new InvalidOperationException("ApiSettings:JwtOptions:Issuer is not configured.");
+var jwtAudience = jwtSection["Audience"]
+    ?? throw new InvalidOperationException("ApiSettings:JwtOptions:Audience is not configured.");
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
+            ValidateIssuer = true,
+            ValidIssuer = jwtIssuer,
+            ValidateAudience = true,
+            ValidAudience = jwtAudience,
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.FromMinutes(1)
+        };
+    });
+
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 builder.Services.AddScoped<IAuthService, AuthService>(); //register authService
 
@@ -33,7 +62,8 @@ builder.Services.AddOptions<JwtOptions>()
     .ValidateOnStart();
 
 builder.Services.AddControllers();
-builder.Services.AddHealthChecks();
+builder.Services.AddVinServiceDefaults();
+builder.Services.AddHealthChecks().AddDbContextReadinessCheck<AppDbContext>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -48,12 +78,13 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseVinServiceDefaults();
 
 app.UseAuthentication();// MUST be put before authorize
 app.UseAuthorization();
 
 app.MapControllers();
-app.MapHealthChecks("/health");
+app.MapVinHealthChecks();
 
 ApplyMigration(); //applied migration method
 

@@ -29,6 +29,7 @@
 
 	<ItemGroup>
 	  <ProjectReference Include="..\Vin.MessageBus\Vin.MessageBus.csproj" />
+	  <ProjectReference Include="..\Vin.BuildingBlocks\Vin.BuildingBlocks.csproj" />
 	</ItemGroup>
 
 </Project>

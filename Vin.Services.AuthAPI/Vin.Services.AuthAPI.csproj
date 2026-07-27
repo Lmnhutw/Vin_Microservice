@@ -26,4 +26,8 @@
     <Folder Include="Migrations\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Vin.BuildingBlocks\Vin.BuildingBlocks.csproj" />
+  </ItemGroup>
+
 </Project>

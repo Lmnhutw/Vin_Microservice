@@ -31,7 +31,8 @@ type SortMode = 'featured' | 'price-asc' | 'price-desc' | 'name';
       <div class="hero-visual" aria-hidden="true">
         @if (featuredProduct) {
           <img
-            [src]="featuredProduct.imageUrl || featuredProduct.imageLocalPath || '/images/product-placeholder.svg'"
+            src="/assets/images/catalog-fallback.svg"
+            [src]="featuredProduct.imageUrl || featuredProduct.imageLocalPath || '/assets/images/catalog-fallback.svg'"
             alt=""
           />
           <div class="hero-caption">
@@ -115,7 +116,8 @@ type SortMode = 'featured' | 'price-asc' | 'price-desc' | 'name';
             <article class="product-tile" [class.product-tile--wide]="index === 0 && !hasActiveFilters">
               <a class="product-media" [routerLink]="['/products', product.productId]">
                 <img
-                  [src]="product.imageUrl || product.imageLocalPath || '/images/product-placeholder.svg'"
+                  src="/assets/images/catalog-fallback.svg"
+                  [src]="product.imageUrl || product.imageLocalPath || '/assets/images/catalog-fallback.svg'"
                   [alt]="product.name"
                   loading="lazy"
                 />

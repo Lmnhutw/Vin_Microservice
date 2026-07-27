@@ -48,3 +48,16 @@ export interface Cart {
   };
   cartDetails: CartItem[];
 }
+
+export type OrderStatus = 'PendingPayment' | 'PendingInventory' | 'CompensatingPayment' | 'Confirmed' | 'Rejected';
+
+export interface Order {
+  orderId: string;
+  orderNumber: string;
+  userId: string;
+  totalAmount: number;
+  status: OrderStatus;
+  failureReason?: string;
+  createdOnUtc: string;
+  lines: Array<{ productId: number; productName: string; unitPrice: number; quantity: number }>;
+}

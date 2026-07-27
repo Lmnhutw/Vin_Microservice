@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Vin.BuildingBlocks.Diagnostics;
+using Vin.BuildingBlocks.Health;
 using Vin.Services.ProductAPI;
 using Vin.Services.ProductAPI.Data;
 
@@ -22,7 +24,8 @@ IMapper mapper = MappingConfig.InstanceMaps().CreateMapper();
 builder.Services.AddSingleton(mapper);
 
 builder.Services.AddControllers();
-builder.Services.AddHealthChecks();
+builder.Services.AddVinServiceDefaults();
+builder.Services.AddHealthChecks().AddDbContextReadinessCheck<AppDbContext>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(option =>
@@ -92,13 +95,14 @@ if (app.Environment.IsDevelopment())
 
 
 app.UseHttpsRedirection();
+app.UseVinServiceDefaults();
 
 
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-app.MapHealthChecks("/health");
+app.MapVinHealthChecks();
 
 ApplyMigration();
 

@@ -8,6 +8,7 @@ using Newtonsoft.Json;
 using Vin.Web.Models;
 using Vin.Web.Models.AuthModels;
 using Vin.Web.Models.CartModels;
+using Vin.Web.Models.OrderModels;
 using Vin.Web.Service.IService;
 
 namespace Vin.Web.Controllers;
@@ -20,6 +21,7 @@ public sealed class BffController : ControllerBase
     private readonly IProductService _productService;
     private readonly ICouponService _couponService;
     private readonly IShoppingCartService _cartService;
+    private readonly IOrderService _orderService;
     private readonly ITokenProvider _tokenProvider;
 
     public BffController(
@@ -27,12 +29,14 @@ public sealed class BffController : ControllerBase
         IProductService productService,
         ICouponService couponService,
         IShoppingCartService cartService,
+        IOrderService orderService,
         ITokenProvider tokenProvider)
     {
         _authService = authService;
         _productService = productService;
         _couponService = couponService;
         _cartService = cartService;
+        _orderService = orderService;
         _tokenProvider = tokenProvider;
     }
 
@@ -188,6 +192,44 @@ public sealed class BffController : ControllerBase
     [HttpPost("cart/email")]
     [Authorize]
     public async Task<IActionResult> EmailCart([FromBody] CartDTO cart) => Ok(await _cartService.EmailCart(cart));
+
+    [HttpPost("checkout")]
+    [Authorize]
+    public async Task<IActionResult> Checkout(CancellationToken cancellationToken)
+    {
+        var cartResponse = await _cartService.GetCartByUserIdAsync(CurrentUserId());
+        if (cartResponse is null || !cartResponse.IsSuccess || cartResponse.Result is null)
+        {
+            return Conflict(new ResponseDTO { IsSuccess = false, Message = "Your cart could not be prepared for checkout." });
+        }
+
+        var cart = JsonConvert.DeserializeObject<CartDTO>(Convert.ToString(cartResponse.Result)!);
+        if (cart?.CartDetails is null || !cart.CartDetails.Any())
+        {
+            return BadRequest(new ResponseDTO { IsSuccess = false, Message = "Your cart is empty." });
+        }
+
+        var order = await _orderService.CreateOrderAsync(new CreateOrderRequestDTO
+        {
+            Lines = cart.CartDetails.Select(item => new CreateOrderLineRequestDTO
+            {
+                ProductId = item.ProductId,
+                Quantity = item.Count
+            }).ToArray()
+        }, cancellationToken);
+
+        return order.IsSuccess
+            ? StatusCode(StatusCodes.Status202Accepted, order)
+            : StatusCode(StatusCodes.Status502BadGateway, order);
+    }
+
+    [HttpGet("orders/{orderId:guid}")]
+    [Authorize]
+    public async Task<IActionResult> Order(Guid orderId, CancellationToken cancellationToken)
+    {
+        var response = await _orderService.GetOrderAsync(orderId, cancellationToken);
+        return response.IsSuccess ? Ok(response) : NotFound(response);
+    }
 
     private string CurrentUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier)
         ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub)

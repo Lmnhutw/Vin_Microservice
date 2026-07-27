@@ -34,8 +34,20 @@ namespace Vin.MessageBus
             object message,
             string topicQueueName,
             CancellationToken cancellationToken = default)
+            => await PublishMessageAsync(
+                message,
+                topicQueueName,
+                new MessageBusMetadata(Guid.NewGuid().ToString("N")),
+                cancellationToken);
+
+        public async Task PublishMessageAsync(
+            object message,
+            string topicQueueName,
+            MessageBusMetadata metadata,
+            CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(message);
+            ArgumentNullException.ThrowIfNull(metadata);
             if (string.IsNullOrWhiteSpace(topicQueueName))
             {
                 throw new ArgumentException("A Service Bus queue or topic name is required.", nameof(topicQueueName));
@@ -50,9 +62,18 @@ namespace Vin.MessageBus
             var messageBody = JsonSerializer.Serialize(message);
             var serviceBusMessage = new ServiceBusMessage(Encoding.UTF8.GetBytes(messageBody))
             {
-                CorrelationId = Guid.NewGuid().ToString("N"),
+                MessageId = metadata.MessageId ?? Guid.NewGuid().ToString("N"),
+                CorrelationId = metadata.CorrelationId,
                 ContentType = "application/json"
             };
+            if (!string.IsNullOrWhiteSpace(metadata.EventType))
+            {
+                serviceBusMessage.ApplicationProperties["eventType"] = metadata.EventType;
+            }
+            if (metadata.EventVersion is not null)
+            {
+                serviceBusMessage.ApplicationProperties["eventVersion"] = metadata.EventVersion.Value;
+            }
 
             var stopwatch = Stopwatch.StartNew();
             try

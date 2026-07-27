@@ -35,7 +35,8 @@ import { NotificationService } from '../../core/notification.service';
       <article class="product-detail">
         <figure class="detail-media">
           <img
-            [src]="product.imageUrl || product.imageLocalPath || '/images/product-placeholder.svg'"
+            src="/assets/images/catalog-fallback.svg"
+            [src]="product.imageUrl || product.imageLocalPath || '/assets/images/catalog-fallback.svg'"
             [alt]="product.name"
           />
           <figcaption>{{ product.categoryName || 'Vin selection' }}</figcaption>

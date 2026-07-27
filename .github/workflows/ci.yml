@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: VinWeb/ClientApp/package-lock.json
+      - name: Restore .NET
+        run: dotnet restore Vin.sln --nologo
+      - name: Build .NET
+        run: dotnet build Vin.sln --no-restore --configuration Release --nologo
+      - name: Test .NET
+        run: dotnet test Vin.sln --no-build --configuration Release --nologo -v:minimal
+      - name: Build Angular
+        working-directory: VinWeb/ClientApp
+        run: |
+          npm ci
+          npm run build
+      - name: Validate Docker Compose
+        run: docker compose -f compose.yaml config --quiet
+      - name: Validate whitespace
+        run: git diff --check HEAD^

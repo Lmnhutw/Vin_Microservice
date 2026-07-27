@@ -1,7 +1,7 @@
 import { CurrencyPipe } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { ApiService } from '../../core/api.service';
 import { Cart, CartItem } from '../../core/models';
@@ -52,7 +52,8 @@ import { NotificationService } from '../../core/notification.service';
             <article class="cart-line">
               <a class="cart-image" [routerLink]="['/products', item.productId]">
                 <img
-                  [src]="item.product?.imageUrl || item.product?.imageLocalPath || '/images/product-placeholder.svg'"
+                  src="/assets/images/catalog-fallback.svg"
+                  [src]="item.product?.imageUrl || item.product?.imageLocalPath || '/assets/images/catalog-fallback.svg'"
                   [alt]="item.product?.name || 'Product'"
                 />
               </a>
@@ -118,6 +119,10 @@ import { NotificationService } from '../../core/notification.service';
             {{ emailPending ? 'Routing request…' : 'Email this cart' }}
           </button>
           <p class="summary-note">This action publishes a message for the Notification service. It does not place an order.</p>
+          <button class="button button-accent button-full" type="button" (click)="checkout()" [disabled]="checkoutPending">
+            {{ checkoutPending ? 'Creating order…' : 'Place learning order' }}
+          </button>
+          <p class="summary-note">Order, Payment and Inventory will now process this cart asynchronously. You can track each saga state next.</p>
         </aside>
       </section>
     }
@@ -126,6 +131,7 @@ import { NotificationService } from '../../core/notification.service';
 export class CartComponent {
   private readonly api = inject(ApiService);
   private readonly notifications = inject(NotificationService);
+  private readonly router = inject(Router);
   protected readonly couponControl = new FormControl('', {
     nonNullable: true,
     validators: [Validators.required, Validators.maxLength(32)]
@@ -136,6 +142,7 @@ export class CartComponent {
   protected error = '';
   protected couponPending = false;
   protected emailPending = false;
+  protected checkoutPending = false;
 
   constructor() { this.load(); }
 
@@ -217,6 +224,24 @@ export class CartComponent {
         ? this.notifications.show('Cart message accepted by the Notification route.', 'success')
         : this.notifications.show(response.message || 'The cart message was not accepted.', 'error'),
       error: () => this.notifications.show('The notification route is unavailable. Your cart is unchanged.', 'error')
+    });
+  }
+
+  checkout(): void {
+    if (this.checkoutPending || this.cart.cartDetails.length === 0) return;
+    this.checkoutPending = true;
+    this.api.checkout().pipe(
+      finalize(() => this.checkoutPending = false)
+    ).subscribe({
+      next: response => {
+        if (!response.isSuccess || !response.result?.orderId) {
+          this.notifications.show(response.message || 'Order could not be created.', 'error');
+          return;
+        }
+        this.notifications.show('Order accepted. The saga is now processing.', 'success');
+        void this.router.navigate(['/orders', response.result.orderId]);
+      },
+      error: () => this.notifications.show('Checkout route is unavailable. Your cart is unchanged.', 'error')
     });
   }
 

@@ -61,7 +61,7 @@ type DeletePrompt = { kind: AdminSection; id: number; name: string };
                     <tr>
                       <td>
                         <div class="admin-product-cell">
-                          <img [src]="product.imageUrl || product.imageLocalPath || '/images/product-placeholder.svg'" alt="" />
+                          <img src="/assets/images/catalog-fallback.svg" [src]="product.imageUrl || product.imageLocalPath || '/assets/images/catalog-fallback.svg'" alt="" />
                           <span><strong>{{ product.name }}</strong><small>ITEM / {{ paddedId(product.productId) }}</small></span>
                         </div>
                       </td>

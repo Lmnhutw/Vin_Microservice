@@ -8,6 +8,7 @@ import { ProductDetailComponent } from './features/catalog/product-detail.compon
 import { authGuard } from './core/auth.guard';
 import { adminGuard } from './core/admin.guard';
 import { AdminComponent } from './features/admin/admin.component';
+import { OrderStatusComponent } from './features/orders/order-status.component';
 
 export const routes: Routes = [
   { path: '', component: CatalogComponent, title: 'Vin Shop' },
@@ -16,6 +17,7 @@ export const routes: Routes = [
   { path: 'register', component: RegisterComponent, title: 'Create account | Vin Shop' },
   { path: 'reset-password', component: ResetPasswordComponent, title: 'Reset password | Vin Shop' },
   { path: 'cart', component: CartComponent, canActivate: [authGuard], title: 'Cart | Vin Shop' },
+  { path: 'orders/:id', component: OrderStatusComponent, canActivate: [authGuard], title: 'Order tracking | Vin Shop' },
   { path: 'admin', component: AdminComponent, canActivate: [adminGuard], title: 'Admin | Vin Shop' },
   { path: '**', redirectTo: '' }
 ];

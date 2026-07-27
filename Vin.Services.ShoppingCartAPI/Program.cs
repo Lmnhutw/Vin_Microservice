@@ -5,6 +5,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
+using Vin.BuildingBlocks.Diagnostics;
+using Vin.BuildingBlocks.Health;
 using Vin.MessageBus;
 using Vin.Services.ShoppingCartAPI;
 using Vin.Services.ShoppingCartAPI.Data;
@@ -25,10 +27,14 @@ IMapper mapper = MappingConfig.RegisterMaps().CreateMapper();
 builder.Services.AddSingleton(mapper);
 
 builder.Services.AddHttpClient("GetProduct",
-    u => u.BaseAddress = new Uri(builder.Configuration["ServiceUrls:ProductAPI"] ?? throw new InvalidOperationException("ServiceUrls:ProductAPI is not configured."))).AddHttpMessageHandler<AuthenticatedHttpClientHandler>();
+    u => u.BaseAddress = new Uri(builder.Configuration["ServiceUrls:ProductAPI"] ?? throw new InvalidOperationException("ServiceUrls:ProductAPI is not configured.")))
+    .AddHttpMessageHandler<AuthenticatedHttpClientHandler>()
+    .AddVinResilience();
 
 builder.Services.AddHttpClient("GetCoupon",
-    u => u.BaseAddress = new Uri(builder.Configuration["ServiceUrls:CouponAPI"] ?? throw new InvalidOperationException("ServiceUrls:CouponAPI is not configured."))).AddHttpMessageHandler<AuthenticatedHttpClientHandler>();
+    u => u.BaseAddress = new Uri(builder.Configuration["ServiceUrls:CouponAPI"] ?? throw new InvalidOperationException("ServiceUrls:CouponAPI is not configured.")))
+    .AddHttpMessageHandler<AuthenticatedHttpClientHandler>()
+    .AddVinResilience();
 
 
 builder.Services.AddScoped<AuthenticatedHttpClientHandler>();
@@ -55,7 +61,8 @@ builder.Services.AddHttpContextAccessor();
 
 
 builder.Services.AddControllers();
-builder.Services.AddHealthChecks();
+builder.Services.AddVinServiceDefaults();
+builder.Services.AddHealthChecks().AddDbContextReadinessCheck<AppDbContext>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(option =>
@@ -146,13 +153,14 @@ if (app.Environment.IsDevelopment())
 
 
 app.UseHttpsRedirection();
+app.UseVinServiceDefaults();
 
 
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-app.MapHealthChecks("/health");
+app.MapVinHealthChecks();
 
 ApplyMigration();
 

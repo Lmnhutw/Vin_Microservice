@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using Vin.BuildingBlocks.Diagnostics;
+using Vin.BuildingBlocks.Health;
 using Vin.MessageBus;
 using Vin.Services.EmailAPI.Data;
 using Vin.Services.EmailAPI.Messaging;
@@ -47,7 +49,16 @@ if (emailConsumerCanStart)
 }
 
 builder.Services.AddControllers();
-builder.Services.AddHealthChecks();
+builder.Services.AddVinServiceDefaults();
+var healthChecks = builder.Services.AddHealthChecks();
+if (!string.IsNullOrWhiteSpace(databaseConnection))
+{
+    healthChecks.AddDbContextReadinessCheck<AppDbContext>();
+}
+else
+{
+    healthChecks.AddCheck("database", () => Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Unhealthy("Connection string is not configured."), tags: ["ready"]);
+}
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -60,10 +71,11 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseVinServiceDefaults();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
-app.MapHealthChecks("/health");
+app.MapVinHealthChecks();
 
 if (!serviceBusConfigured)
 {

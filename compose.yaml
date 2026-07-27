@@ -30,6 +30,23 @@ services:
       start_period: 20s
     restart: unless-stopped
 
+  servicebus-emulator:
+    image: mcr.microsoft.com/azure-messaging/servicebus-emulator:latest
+    environment:
+      SQL_SERVER: sqlserver
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:-VinLocal_DevPassword123!}
+      ACCEPT_EULA: Y
+      EMULATOR_HTTP_PORT: 5300
+    volumes:
+      - ./infra/servicebus/Config.json:/ServiceBus_Emulator/ConfigFiles/Config.json:ro
+    ports:
+      - "5672:5672"
+      - "5300:5300"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    restart: unless-stopped
+
   auth-api:
     <<: *api-common
     build:
@@ -97,6 +114,7 @@ services:
       ApiSettings__Audience: vin-client
       ServiceUrls__ProductAPI: http://product-api:8080
       ServiceUrls__CouponAPI: http://coupon-api:8080
+      ServiceBus__ConnectionString: Endpoint=sb://servicebus-emulator;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -118,8 +136,82 @@ services:
     environment:
       <<: *runtime-defaults
       ConnectionStrings__DefaultConnection: Server=sqlserver,1433;Database=Vin_Email;User Id=sa;Password=${MSSQL_SA_PASSWORD:-VinLocal_DevPassword123!};Encrypt=False;TrustServerCertificate=True
+      ServiceBus__ConnectionString: Endpoint=sb://servicebus-emulator;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;
     ports:
       - "8085:8080"
+
+  order-api:
+    <<: *api-common
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PROJECT_FILE: Vin.Services.OrderAPI/Vin.Services.OrderAPI.csproj
+        APP_DLL: Vin.Services.OrderAPI.dll
+    environment:
+      <<: *runtime-defaults
+      ConnectionStrings__DefaultConnection: Server=sqlserver,1433;Database=Vin_Order;User Id=sa;Password=${MSSQL_SA_PASSWORD:-VinLocal_DevPassword123!};Encrypt=False;TrustServerCertificate=True
+      ApiSettings__Secret: ${JWT_SECRET:-VinLocalDevelopmentJwtSecret_ChangeBeforeProduction_2026}
+      ApiSettings__Issuer: vin-auth-api
+      ApiSettings__Audience: vin-client
+      ServiceUrls__ProductAPI: http://product-api:8080
+      ServiceBus__ConnectionString: Endpoint=sb://servicebus-emulator;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      product-api:
+        condition: service_started
+      servicebus-emulator:
+        condition: service_started
+    ports:
+      - "8086:8080"
+
+  payment-api:
+    <<: *api-common
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PROJECT_FILE: Vin.Services.PaymentAPI/Vin.Services.PaymentAPI.csproj
+        APP_DLL: Vin.Services.PaymentAPI.dll
+    environment:
+      <<: *runtime-defaults
+      ConnectionStrings__DefaultConnection: Server=sqlserver,1433;Database=Vin_Payment;User Id=sa;Password=${MSSQL_SA_PASSWORD:-VinLocal_DevPassword123!};Encrypt=False;TrustServerCertificate=True
+      ApiSettings__Secret: ${JWT_SECRET:-VinLocalDevelopmentJwtSecret_ChangeBeforeProduction_2026}
+      ApiSettings__Issuer: vin-auth-api
+      ApiSettings__Audience: vin-client
+      ServiceBus__ConnectionString: Endpoint=sb://servicebus-emulator;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;
+      PaymentSimulator__RejectEveryNthOrder: ${PAYMENT_REJECT_EVERY_NTH_ORDER:-0}
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      servicebus-emulator:
+        condition: service_started
+    ports:
+      - "8087:8080"
+
+  inventory-api:
+    <<: *api-common
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PROJECT_FILE: Vin.Services.InventoryAPI/Vin.Services.InventoryAPI.csproj
+        APP_DLL: Vin.Services.InventoryAPI.dll
+    environment:
+      <<: *runtime-defaults
+      ConnectionStrings__DefaultConnection: Server=sqlserver,1433;Database=Vin_Inventory;User Id=sa;Password=${MSSQL_SA_PASSWORD:-VinLocal_DevPassword123!};Encrypt=False;TrustServerCertificate=True
+      ApiSettings__Secret: ${JWT_SECRET:-VinLocalDevelopmentJwtSecret_ChangeBeforeProduction_2026}
+      ApiSettings__Issuer: vin-auth-api
+      ApiSettings__Audience: vin-client
+      ServiceBus__ConnectionString: Endpoint=sb://servicebus-emulator;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      servicebus-emulator:
+        condition: service_started
+    ports:
+      - "8088:8080"
 
   web:
     <<: *api-common
@@ -135,6 +227,7 @@ services:
       ServiceUrls__ProductAPI: http://product-api:8080
       ServiceUrls__CouponAPI: http://coupon-api:8080
       ServiceUrls__ShoppingCartAPI: http://shopping-cart-api:8080
+      ServiceUrls__OrderAPI: http://order-api:8080
     depends_on:
       auth-api:
         condition: service_started
@@ -143,6 +236,8 @@ services:
       coupon-api:
         condition: service_started
       shopping-cart-api:
+        condition: service_started
+      order-api:
         condition: service_started
     ports:
       - "8080:8080"

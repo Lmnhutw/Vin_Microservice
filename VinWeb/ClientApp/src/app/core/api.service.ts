@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
-import { Cart, CartItem, Coupon, Product, ResponseDto, User } from './models';
+import { Cart, CartItem, Coupon, Order, Product, ResponseDto, User } from './models';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
@@ -93,6 +93,19 @@ export class ApiService {
 
   emailCart(cart: Cart): Observable<ResponseDto<unknown>> {
     return this.http.post<ResponseDto<unknown>>(`${this.baseUrl}/cart/email`, cart);
+  }
+
+  checkout(): Observable<ResponseDto<Order>> {
+    return this.http.post<ResponseDto<Order>>(`${this.baseUrl}/checkout`, {});
+  }
+
+  order(orderId: string): Observable<Order> {
+    return this.http.get<ResponseDto<Order>>(`${this.baseUrl}/orders/${orderId}`).pipe(
+      map(response => {
+        if (!response.result) throw new Error(response.message || 'Order not found.');
+        return response.result;
+      })
+    );
   }
 
   coupons(): Observable<Coupon[]> {

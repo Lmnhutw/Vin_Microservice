@@ -69,6 +69,15 @@ You are working in the existing `Vin_Microservice` repository. Complete the full
 - Update the roadmap as slices land.
 - Briefly report the changed behavior, architectural reason, blast radius, verification evidence, and remaining risks after each slice.
 
+## Landed slices
+
+- UI shell, catalogue, product detail, cart, auth recovery, role-aware admin, responsive states, and an asynchronous order tracker are implemented in Angular.
+- BFF has a same-origin checkout facade and order polling route; it reads the authenticated user's Cart and never accepts a browser-provided user id for checkout.
+- `Vin.BuildingBlocks` supplies correlation, ProblemDetails, health endpoints, request telemetry, and HTTP timeout/retry/circuit-breaking primitives.
+- `Vin.Contracts` and `Vin.Eventing` implement versioned envelopes, transactional outbox, idempotent inbox, retry/dead-letter state, and Service Bus consumers.
+- Order, Payment simulator, and Inventory now exist as separately owned APIs with separate SQL databases and migrations. Order owns the saga and explicit payment-refund compensation.
+- Compose now starts the Service Bus emulator with `vin-events` subscriptions for Order, Payment, and Inventory. Architecture, failure injection, and ADRs are in `docs/ARCHITECTURE.md` and `docs/adr/`.
+
 ## Verification criteria
 
 - Angular production build passes and critical UI routes are visually checked at desktop and mobile sizes.

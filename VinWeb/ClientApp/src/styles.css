@@ -1799,6 +1799,73 @@ a:hover {
   }
 }
 
+.order-tracker {
+  border-top: 1px solid var(--line-dark);
+  margin: 2.5rem var(--space-page) 5rem;
+  max-width: 1060px;
+  padding: 2rem 0 0;
+}
+
+.order-tracker__heading {
+  align-items: end;
+  display: flex;
+  gap: 2rem;
+  justify-content: space-between;
+}
+
+.order-tracker__heading h2 {
+  font-family: var(--font-display);
+  font-size: clamp(2.3rem, 5vw, 4.6rem);
+  letter-spacing: -.055em;
+  line-height: .9;
+  margin: .4rem 0 0;
+}
+
+.order-tracker__heading > strong {
+  color: var(--ink);
+  font-size: clamp(1.7rem, 3vw, 2.8rem);
+  letter-spacing: -.05em;
+}
+
+.order-tracker__summary {
+  color: var(--ink-muted);
+  max-width: 660px;
+}
+
+.saga-timeline {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  list-style: none;
+  margin: 2.5rem 0;
+  padding: 0;
+}
+
+.saga-timeline li {
+  border-top: 2px solid var(--line-dark);
+  color: var(--ink-muted);
+  min-height: 160px;
+  padding: 1rem 1.25rem 1rem 0;
+}
+
+.saga-timeline li + li { padding-left: 1.25rem; }
+.saga-timeline li.is-complete { border-color: var(--accent); color: var(--ink); }
+.saga-timeline li.is-current { background: color-mix(in srgb, var(--accent) 14%, transparent); }
+.saga-timeline span { color: var(--accent-ink); display: block; font-size: .75rem; font-weight: 800; letter-spacing: .14em; margin-bottom: 1.5rem; }
+.saga-timeline strong, .saga-timeline small { display: block; }
+.saga-timeline small { line-height: 1.45; margin-top: .35rem; }
+
+.order-lines { border-top: 1px solid var(--line); }
+.order-lines > div { align-items: baseline; border-bottom: 1px solid var(--line); display: flex; gap: 1rem; justify-content: space-between; padding: .85rem 0; }
+.order-lines strong { white-space: nowrap; }
+
+@media (max-width: 760px) {
+  .order-tracker { margin-inline: var(--space-page); }
+  .order-tracker__heading { align-items: flex-start; flex-direction: column; gap: 1rem; }
+  .saga-timeline { grid-template-columns: 1fr; }
+  .saga-timeline li, .saga-timeline li + li { min-height: 0; padding: 1rem 0; }
+  .saga-timeline span { margin-bottom: .5rem; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;

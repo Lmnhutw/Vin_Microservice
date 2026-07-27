@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using NToastNotify;
+using Vin.BuildingBlocks.Diagnostics;
+using Vin.BuildingBlocks.Health;
 using Vin.Web.Service;
 using Vin.Web.Service.IService;
 using Vin.Web.Utility;
@@ -8,18 +10,15 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
-builder.Services.AddHttpContextAccessor();
-builder.Services.AddHttpClient();
-builder.Services.AddHttpClient<ICouponService, CouponService>();
-builder.Services.AddHttpClient<IProductService, ProductService>();
-builder.Services.AddHttpClient<IAuthService, AuthService>();
-builder.Services.AddHttpClient<IShoppingCartService, ShoppingCartService>();
+builder.Services.AddVinServiceDefaults();
+builder.Services.AddHttpClient("VinAPI").AddVinResilience();
 
 //Configure API
 StaticDetail.CouponAPIBase = builder.Configuration["ServiceUrls:CouponAPI"];
 StaticDetail.AuthAPIBase = builder.Configuration["ServiceUrls:AuthAPI"];
 StaticDetail.ProductAPIBase = builder.Configuration["ServiceUrls:ProductAPI"];
 StaticDetail.ShoppingCartAPIBase = builder.Configuration["ServiceUrls:ShoppingCartAPI"];
+StaticDetail.OrderAPIBase = builder.Configuration["ServiceUrls:OrderAPI"];
 
 // Toaster services
 builder.Services.AddControllersWithViews()
@@ -29,7 +28,7 @@ builder.Services.AddControllersWithViews()
         PositionClass = ToastPositions.BottomCenter,
         TimeOut = 5000
     });
-builder.Services.AddHealthChecks();
+builder.Services.AddHealthChecks().AddCheck("bff", () => Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Healthy(), tags: ["ready"]);
 
 builder.Services.AddScoped<ITokenProvider, TokenProvider>();
 builder.Services.AddScoped<IBaseService, BaseService>();
@@ -37,6 +36,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICouponService, CouponService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IShoppingCartService, ShoppingCartService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
 
 //Add Cookies
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -64,6 +64,7 @@ if (!app.Environment.IsDevelopment())
 app.UseNToastNotify();
 
 app.UseHttpsRedirection();
+app.UseVinServiceDefaults();
 app.UseStaticFiles();
 
 app.UseRouting();
@@ -84,6 +85,6 @@ else
         pattern: "{controller=Home}/{action=Index}/{id?}");
 }
 
-app.MapHealthChecks("/health");
+app.MapVinHealthChecks();
 
 app.Run();

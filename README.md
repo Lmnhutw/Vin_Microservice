@@ -9,10 +9,15 @@ Vin is a .NET 8 e-commerce solution with separate APIs for authentication, produ
 - `Vin.Services.CouponAPI`: coupon CRUD backed by SQL Server.
 - `Vin.Services.ShoppingCartAPI`: cart operations, synchronous calls to Product/Coupon APIs, and optional Azure Service Bus publishing.
 - `Vin.Services.EmailAPI`: consumes cart messages when Service Bus is configured and persists email notification logs to SQL Server.
+- `Vin.Services.OrderAPI`: owns order state and the checkout saga; it snapshots product prices and writes integration events through its outbox.
+- `Vin.Services.PaymentAPI`: deterministic payment simulator that authorizes/rejects/refunds without claiming to process real money.
+- `Vin.Services.InventoryAPI`: sole owner of configured stock and order reservations.
 - `Vin.MessageBus`: shared Azure Service Bus publisher infrastructure.
+- `Vin.Contracts`: versioned, data-only integration event contracts.
+- `Vin.Eventing`: transactional outbox, idempotent inbox, and Azure Service Bus consumer/publisher building blocks.
 - `VinWeb`: ASP.NET Core host and same-origin BFF that serves Angular and calls the internal APIs through typed services.
 
-Each API owns its EF Core `DbContext` and database migrations. The current solution does not yet contain an Order API, gateway, payment integration, RabbitMQ integration, or Azure deployment configuration.
+Each API owns its EF Core `DbContext` and database migrations. The local Compose stack includes the Azure Service Bus emulator and declarative topic/subscription setup so the Order/Payment/Inventory workflow can be inspected without a cloud subscription. Read [the architecture lab guide](docs/ARCHITECTURE.md) before changing the distributed flow.
 ## FE flow and API contract
 
 The browser uses the same-origin Angular client and BFF. Internal service URLs and JWTs stay server-side:
@@ -72,15 +77,14 @@ docker compose up --build
 
 The MVC web client is available at `http://localhost:8080`. The APIs are also
 published for Swagger/debugging: Product `8081`, Auth `8082`, Coupon `8083`,
-Shopping Cart `8084`, and Email `8085` (for example,
+ Shopping Cart `8084`, Email `8085`, Order `8086`, Payment `8087`, and Inventory `8088` (for example,
 `http://localhost:8081/swagger`). SQL Server is published at `localhost:1433`
 and its data is persisted in the `sqlserver-data` Docker volume.
 
 The Compose file provides development-only defaults for the SQL password and
 JWT secret so the command works on a fresh machine. To override them, copy
 `.env.example` to `.env` and set strong values there; `.env` is ignored by Git.
-The email consumer remains disabled unless `ServiceBus__ConnectionString` is
-provided, matching the normal local/degraded behavior.
+Compose supplies a development-only Service Bus emulator connection. It declares `vin-events` subscriptions and the `emailshoppingcart` queue in `infra/servicebus/Config.json`; the emulator is for local development/test only.
 
 Stop the stack with `docker compose down`. Use
 `docker compose down --volumes` only when you intentionally want to delete all
@@ -96,6 +100,9 @@ dotnet run --project Vin.Services.ProductAPI
 dotnet run --project Vin.Services.CouponAPI
 dotnet run --project Vin.Services.ShoppingCartAPI
 dotnet run --project Vin.Services.EmailAPI
+dotnet run --project Vin.Services.OrderAPI
+dotnet run --project Vin.Services.PaymentAPI
+dotnet run --project Vin.Services.InventoryAPI
 dotnet run --project VinWeb
 ```
 
@@ -118,13 +125,14 @@ GitNexus currently reports that its LadybugDB FTS extension is unavailable; grap
 - EmailAPI uses an `IHostedService` for Service Bus lifecycle and an `IDbContextFactory` for background database work.
 - Invalid email-cart messages are dead-lettered; processing failures are rethrown so Service Bus can retry them.
 - The current EmailAPI persists notification logs. A real email delivery provider can be added later without changing the message consumer contract.
+- Checkout is at-least-once and eventually consistent. Each new workflow service stores integration events in a local outbox and processed event ids in a local inbox; Order owns saga state and requests payment compensation after an inventory rejection.
+- `/health/live` proves a process is running; `/health/ready` checks its local database. `X-Correlation-ID`, `ActivitySource`, and `Meter` make cross-service tracing visible.
 - Cart endpoints require JWT authentication and scope cart reads/writes to the authenticated user.
 - BaseService.SendAsync is a shared FE boundary used by authentication, product, coupon, and cart flows; changes to it require full-solution verification.
 
 ## Future work
 
-1. Add FE-BE integration tests for login, cart ownership, coupon failures, token expiry, and message-bus failure handling.
-2. Normalize all APIs on a documented ProblemDetails/ResponseDTO error contract.
-3. Add an email delivery adapter and idempotency strategy.
-4. Add OrderAPI and payment workflow after the core boundaries are stable.
-5. Revisit Azure deployment and managed secret storage when the subscription is available.
+1. Add FE-BE integration tests for checkout success, payment rejection, inventory compensation, duplicate events, and DLQ inspection.
+2. Attach an OpenTelemetry/OTLP exporter and local collector once a telemetry backend is selected.
+3. Add a real email delivery adapter and provider-specific delivery status tracking.
+4. Revisit cloud deployment and managed secret storage when the subscription is available.
